@@ -51,6 +51,9 @@ public class Cliente implements UserDetails {
     @Column(name = "score_credito")
     private Double scoreCredito;
 
+    @Column(name = "jwt_token")
+    private String token;
+
     @ManyToMany(fetch = FetchType.EAGER)
     private List<Perfis> perfis = new ArrayList<>();
 
