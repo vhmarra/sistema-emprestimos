@@ -3,11 +3,14 @@ package br.com.victor.emprestimos.domain;
 
 import br.com.victor.emprestimos.enums.StatusEmprestimo;
 import lombok.Data;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -33,7 +36,8 @@ public class Historico {
     @Enumerated(EnumType.STRING)
     private StatusEmprestimo status;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
+    @LazyCollection(LazyCollectionOption.FALSE)
     @JoinColumn(name = "id_emprestimo")
     Emprestimo emprestimo;
 

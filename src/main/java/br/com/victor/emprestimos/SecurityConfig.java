@@ -43,9 +43,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
                 .antMatchers(HttpMethod.POST,"/cliente/login").permitAll()
                 .antMatchers(HttpMethod.POST,"/cliente/cadastro").permitAll()
-                .antMatchers(HttpMethod.POST,"/cliente/solicita-emprestimo").hasRole("CLIENTE")
+                .antMatchers(HttpMethod.POST,"/cliente/solicita-emprestimo").hasAnyRole()
                 .antMatchers(HttpMethod.DELETE,"/adm/delete-emprestimo/*").hasRole("SUPER")
-                .antMatchers(HttpMethod.DELETE,"/cliente/listar-emprestimos").hasRole("CLIENTE")
+                .antMatchers(HttpMethod.PATCH,"/adm/altera-emprestimo/**").hasRole("SUPER")
+                .antMatchers(HttpMethod.PATCH,"/adm/altera-emprestimo/**").hasRole("MODERADOR")
+                .antMatchers(HttpMethod.GET,"/cliente/listar-emprestimos").hasAnyRole()
                 .anyRequest().authenticated().and().csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and().addFilterBefore(new TokenFilter(tokenService,repository), UsernamePasswordAuthenticationFilter.class);

@@ -1,10 +1,12 @@
 package br.com.victor.emprestimos.controllers;
 
+import br.com.victor.emprestimos.enums.StatusEmprestimo;
 import br.com.victor.emprestimos.services.EmprestimoService;
 import org.apache.tomcat.websocket.AuthenticationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +31,13 @@ public class AdmController {
     public ResponseEntity<Void> deleteEmprestimo(@RequestHeader String token, @PathVariable(name = "id") Long id) throws AuthenticationException {
         emprestimoService.deleteEmprestimo(token,id);
         return ResponseEntity.status(HttpStatus.GONE).build();
+    }
+
+    @Transactional
+    @PatchMapping("altera-emprestimo/{id}")
+    public ResponseEntity<Void> alteraEmprestimo(@RequestHeader String token,@RequestHeader String cpf, @RequestHeader StatusEmprestimo status,@PathVariable(name = "id") Long id) throws AuthenticationException {
+        emprestimoService.alteraEmprestimo(token,id,cpf,status);
+        return ResponseEntity.ok().build();
     }
 
 

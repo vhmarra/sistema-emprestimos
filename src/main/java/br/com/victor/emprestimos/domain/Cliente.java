@@ -2,6 +2,8 @@ package br.com.victor.emprestimos.domain;
 
 import lombok.Data;
 import lombok.Value;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -56,11 +58,13 @@ public class Cliente implements UserDetails {
     @Column(name = "jwt_token")
     private String token;
 
-    @ManyToMany
-    private List<Perfis> perfis = new ArrayList<>();
-
     @OneToMany(fetch = FetchType.EAGER)
     private List<Emprestimo> emprestimos;
+
+    @ManyToMany
+    private List<Perfis> perfis;
+
+
 
 
     @Override

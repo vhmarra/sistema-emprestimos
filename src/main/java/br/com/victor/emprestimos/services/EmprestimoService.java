@@ -18,7 +18,9 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class EmprestimoService {
@@ -38,14 +40,14 @@ public class EmprestimoService {
     }
 
 
-    public void solicitaEmprestimo(String token,EmprestimoRequest request) throws AuthenticationException {
-        if(!tokenService.isTokenValid(token)){
+    public void solicitaEmprestimo(String token, EmprestimoRequest request) throws AuthenticationException {
+        if (!tokenService.isTokenValid(token)) {
             throw new AuthenticationException("Dados invalidos");
         }
 
         //TODO verificar score de credito e validacoes;
         Optional<Cliente> cliente = clienteRepository.findById(tokenService.getClienteId(token));
-        if(cliente.isPresent()){
+        if (cliente.isPresent()) {
             List<Emprestimo> emprestimos = new ArrayList<>();
 
             Emprestimo emprestimo = new Emprestimo();
@@ -70,14 +72,14 @@ public class EmprestimoService {
     }
 
 
-    public void deleteEmprestimo(String token,Long id) throws AuthenticationException {
+    public void deleteEmprestimo(String token, Long id) throws AuthenticationException {
         Optional<Cliente> cliente = clienteRepository.findById(tokenService.getClienteId(token));
         Optional<Perfis> perfil = perfilRepository.findById(3L);
         Optional<Emprestimo> emprestimo = emprestimoRepository.findById(id);
         Optional<Historico> historico = historicoRepository.findByEmprestimoId(emprestimo.get().getId());
 
         //PERFIL 3 DE SUPER MODERADOR
-        if(!cliente.get().getAuthorities().contains(perfil.get())){
+        if (!cliente.get().getAuthorities().contains(perfil.get())) {
             throw new AuthenticationException("sem autorizacao");
         }
 
@@ -87,7 +89,7 @@ public class EmprestimoService {
     }
 
     public List<EmprestimoDto> listarEmprestimos(String token) throws AuthenticationException {
-        if(!tokenService.isTokenValid(token)){
+        if (!tokenService.isTokenValid(token)) {
             throw new AuthenticationException("Token invalido");
         }
 
@@ -95,7 +97,7 @@ public class EmprestimoService {
 
         List<EmprestimoDto> response = new ArrayList<>();
 
-        emprestimos.forEach(e->{
+        emprestimos.forEach(e -> {
             EmprestimoDto dto = new EmprestimoDto();
             dto.setId(e.getId());
             dto.setStatus(e.getStatus().toString());
@@ -105,6 +107,14 @@ public class EmprestimoService {
             response.add(dto);
         });
         return response;
+    }
+
+    @Transactional
+    public void alteraEmprestimo(String token, Long id, String cpf, StatusEmprestimo status) throws AuthenticationException {
+        if (!tokenService.isTokenValid(token)) {
+            throw new AuthenticationException("Token Invalido");
+        }
+
     }
 
 
