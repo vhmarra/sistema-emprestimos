@@ -44,6 +44,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST,"/cliente/login").permitAll()
                 .antMatchers(HttpMethod.POST,"/cliente/cadastro").permitAll()
                 .antMatchers(HttpMethod.POST,"/cliente/solicita-emprestimo").hasRole("CLIENTE")
+                .antMatchers(HttpMethod.DELETE,"/adm/delete-emprestimo/*").hasRole("SUPER")
+                .antMatchers(HttpMethod.DELETE,"/cliente/listar-emprestimos").hasRole("CLIENTE")
                 .anyRequest().authenticated().and().csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and().addFilterBefore(new TokenFilter(tokenService,repository), UsernamePasswordAuthenticationFilter.class);

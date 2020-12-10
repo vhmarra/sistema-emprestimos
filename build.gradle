@@ -34,6 +34,9 @@ dependencies {
 	compile (group: 'org.springframework.security', name: 'spring-security-core', version: '5.4.2')
 // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt
 	compile group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
+	// https://mvnrepository.com/artifact/javax.validation/validation-api
+	compile group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
+
 
 
 }

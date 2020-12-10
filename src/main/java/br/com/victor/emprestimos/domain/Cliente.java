@@ -1,6 +1,7 @@
 package br.com.victor.emprestimos.domain;
 
 import lombok.Data;
+import lombok.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +17,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -54,11 +56,10 @@ public class Cliente implements UserDetails {
     @Column(name = "jwt_token")
     private String token;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany
     private List<Perfis> perfis = new ArrayList<>();
 
-    @OneToMany
-    @JoinColumn(name = "id_cliente")
+    @OneToMany(fetch = FetchType.EAGER)
     private List<Emprestimo> emprestimos;
 
 

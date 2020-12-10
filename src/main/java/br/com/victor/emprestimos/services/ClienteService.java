@@ -34,7 +34,7 @@ public class ClienteService {
         this.tokenService = tokenService;
     }
 
-    @Transactional
+
     public void cadastraCliente(CadastraClienteRequest request) throws Exception {
         Cliente cliente = clienteRepository.findByCpf(request.getCpf()).orElse(null);
 
