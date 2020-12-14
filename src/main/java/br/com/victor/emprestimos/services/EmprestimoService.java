@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -39,32 +40,32 @@ public class EmprestimoService {
         this.perfilRepository = perfilRepository;
     }
 
-
     public void solicitaEmprestimo(String token, EmprestimoRequest request) throws AuthenticationException {
         if (!tokenService.isTokenValid(token)) {
             throw new AuthenticationException("Dados invalidos");
         }
 
-        //TODO verificar score de credito e validacoes;
+
         Optional<Cliente> cliente = clienteRepository.findById(tokenService.getClienteId(token));
         if (cliente.isPresent()) {
             List<Emprestimo> emprestimos = new ArrayList<>();
-
             Emprestimo emprestimo = new Emprestimo();
+
             emprestimo.setValor(request.getValor());
             emprestimo.setStatus(StatusEmprestimo.EM_ANALISE);
             emprestimo.setDataSolicitacao(LocalDateTime.now());
             emprestimo.setCliente(cliente.get());
+
             emprestimos.add(emprestimo);
 
             cliente.get().setEmprestimos(emprestimos);
 
             Historico historico = new Historico();
-            historico.setEmprestimo(emprestimos.get(0));
-            historico.setStatus(emprestimos.get(0).getStatus());
-            historico.setDataUpdate(emprestimos.get(0).getDataSolicitacao());
+            historico.setEmprestimo(emprestimo);
+            historico.setStatus(emprestimo.getStatus());
+            historico.setDataUpdate(emprestimo.getDataSolicitacao());
 
-            emprestimoRepository.save(emprestimos.get(0));
+            emprestimoRepository.save(emprestimo);
             clienteRepository.save(cliente.get());
             historicoRepository.save(historico);
         }

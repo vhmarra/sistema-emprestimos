@@ -3,10 +3,8 @@ package br.com.victor.emprestimos.services;
 import br.com.victor.emprestimos.domain.Cliente;
 import br.com.victor.emprestimos.dtos.CadastraClienteRequest;
 import br.com.victor.emprestimos.dtos.LoginClientRequest;
-import br.com.victor.emprestimos.dtos.TokenDto;
 import br.com.victor.emprestimos.repository.ClienteRepository;
 import br.com.victor.emprestimos.repository.PerfilRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -14,7 +12,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.InvalidTransactionException;
-import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -40,6 +37,10 @@ public class ClienteService {
 
         if(cliente != null){
             throw new Exception("Cliente ja existe");
+        }
+
+        if(request.getScoreCredito() < 0 || request.getScoreCredito() > 1000){
+            throw new IllegalArgumentException("Valor invalido para score de credito");
         }
 
         Cliente client = new Cliente();
