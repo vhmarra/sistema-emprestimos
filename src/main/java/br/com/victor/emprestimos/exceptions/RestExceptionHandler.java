@@ -4,6 +4,7 @@ import br.com.victor.emprestimos.dtos.ErrorResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -19,19 +20,19 @@ public class RestExceptionHandler {
     @ExceptionHandler({ NotFoundException.class })
     public ResponseEntity<?> handleNotFoundException(Exception ex) {
         log.error(ex.getMessage(), ex);
-        return new ResponseEntity(new ErrorResponse(ex.getMessage(), 204L), NO_CONTENT);
+        return new ResponseEntity(new ErrorResponse(ex.getMessage(), 204L),new HttpHeaders(), NO_CONTENT);
     }
 
     @ExceptionHandler({ InvalidTokenException.class })
     public ResponseEntity<?> handleInvalidTokenException(Exception ex) {
         log.error(ex.getMessage(), ex);
-        return new ResponseEntity(new ErrorResponse(ex.getMessage(), 403L), FORBIDDEN);
+        return new ResponseEntity(new ErrorResponse(ex.getMessage(), 403L),new HttpHeaders(), FORBIDDEN);
     }
 
     @ExceptionHandler({ InvalidCredencialsException.class })
     public ResponseEntity<?> handleInvalidCredencialException(Exception ex) {
         log.error(ex.getMessage(), ex);
-        return new ResponseEntity(new ErrorResponse(ex.getMessage(), 403L), FORBIDDEN);
+        return new ResponseEntity(new ErrorResponse(ex.getMessage(), 403L),new HttpHeaders(), FORBIDDEN);
     }
 
 

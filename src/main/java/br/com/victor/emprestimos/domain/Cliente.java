@@ -41,9 +41,6 @@ public class Cliente implements UserDetails {
     @Column(name = "senha")
     private String senha;
 
-    @Column(name = "is_logado")
-    private boolean isLogado = false;
-
     @Column(name = "score_credito")
     private Double scoreCredito;
 

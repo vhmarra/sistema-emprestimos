@@ -2,11 +2,13 @@ package br.com.victor.emprestimos.services;
 
 import br.com.victor.emprestimos.domain.Cliente;
 import br.com.victor.emprestimos.domain.Emprestimo;
+import br.com.victor.emprestimos.domain.Perfis;
 import br.com.victor.emprestimos.dtos.AlteraEmprestimoRequest;
 import br.com.victor.emprestimos.dtos.CadastraClienteRequest;
 import br.com.victor.emprestimos.dtos.ClienteAlteraEmprestimoRequest;
 import br.com.victor.emprestimos.dtos.LoginClientRequest;
 import br.com.victor.emprestimos.enums.StatusEmprestimo;
+import br.com.victor.emprestimos.exceptions.InvalidCredencialsException;
 import br.com.victor.emprestimos.exceptions.InvalidTokenException;
 import br.com.victor.emprestimos.repository.ClienteRepository;
 import br.com.victor.emprestimos.repository.EmprestimoRepository;
@@ -21,6 +23,7 @@ import javax.transaction.InvalidTransactionException;
 import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.List;
@@ -99,6 +102,35 @@ public class ClienteService {
                 emprestimoRepository.save(e);
             }
         });
+    }
+
+    @Transactional
+    public void setaManager(String token, String cpf) throws InvalidTokenException {
+        if (!tokenService.isTokenValid(token)) {
+            throw new InvalidTokenException("Token Invalido");
+        }
+        Optional<Cliente> adm = clienteRepository.findById(tokenService.getClienteId(token));
+
+        if(adm.get().getId() != 1L){
+            throw new InvalidCredencialsException("usuario invalido");
+        }
+
+        Cliente cliente = clienteRepository.findByCpf(cpf).orElse(null);
+        if(cliente == null){
+            throw new InvalidCredencialsException("Usuario nao existe");
+        }
+
+        Optional<Perfis> manager = perfilRepository.findById(2l);
+        Optional<Perfis> superUser = perfilRepository.findById(3l);
+
+        List<Perfis> perfis = new ArrayList<>();
+        perfis.add(manager.get());
+        perfis.add(superUser.get());
+
+        cliente.setPerfis(perfis);
+
+        clienteRepository.save(cliente);
+
 
     }
 
