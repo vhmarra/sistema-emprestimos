@@ -21,7 +21,7 @@ public class TokenService {
     @Value("${emprestimos.jwt.secret}")
     private String secret;
 
-    private final ClienteRepository repository;
+    private ClienteRepository repository;
 
     public TokenService(ClienteRepository repository) {
         this.repository = repository;

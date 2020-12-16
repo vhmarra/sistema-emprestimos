@@ -2,17 +2,10 @@ package br.com.victor.emprestimos.dtos;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiKeyAuthDefinition;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.Data;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Data
-
 public class CadastraClienteRequest {
 
     @ApiParam(required = true,value = "nome")

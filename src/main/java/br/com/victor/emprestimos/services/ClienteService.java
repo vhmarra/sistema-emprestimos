@@ -1,9 +1,15 @@
 package br.com.victor.emprestimos.services;
 
 import br.com.victor.emprestimos.domain.Cliente;
+import br.com.victor.emprestimos.domain.Emprestimo;
+import br.com.victor.emprestimos.dtos.AlteraEmprestimoRequest;
 import br.com.victor.emprestimos.dtos.CadastraClienteRequest;
+import br.com.victor.emprestimos.dtos.ClienteAlteraEmprestimoRequest;
 import br.com.victor.emprestimos.dtos.LoginClientRequest;
+import br.com.victor.emprestimos.enums.StatusEmprestimo;
+import br.com.victor.emprestimos.exceptions.InvalidTokenException;
 import br.com.victor.emprestimos.repository.ClienteRepository;
+import br.com.victor.emprestimos.repository.EmprestimoRepository;
 import br.com.victor.emprestimos.repository.PerfilRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -12,23 +18,30 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.InvalidTransactionException;
+import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.InputMismatchException;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ClienteService {
 
-    private final ClienteRepository clienteRepository;
-    private final PerfilRepository perfilRepository;
-    private final AuthenticationManager authManager;
-    private final TokenService tokenService;
+    private ClienteRepository clienteRepository;
+    private EmprestimoRepository emprestimoRepository;
+    private PerfilRepository perfilRepository;
+    private AuthenticationManager authManager;
+    private TokenService tokenService;
 
-    public ClienteService(ClienteRepository clienteRepository, PerfilRepository perfilRepository, AuthenticationManager authManager, TokenService tokenService) {
+    public ClienteService(ClienteRepository clienteRepository, PerfilRepository perfilRepository,
+                          AuthenticationManager authManager, TokenService tokenService,EmprestimoRepository emprestimoRepository) {
         this.clienteRepository = clienteRepository;
         this.perfilRepository = perfilRepository;
         this.authManager = authManager;
         this.tokenService = tokenService;
+        this.emprestimoRepository = emprestimoRepository;
     }
 
 
@@ -68,7 +81,26 @@ public class ClienteService {
         }
     }
 
+    @Transactional
+    public void alteraEmprestimo(String token, ClienteAlteraEmprestimoRequest request) throws InvalidTokenException {
+        if (!tokenService.isTokenValid(token)) {
+            throw new InvalidTokenException("Token Invalido");
+        }
 
+        Optional<Cliente> cliente = clienteRepository.findById(tokenService.getClienteId(token));
+        List<Emprestimo> emprestimos = emprestimoRepository.findAllByClienteId(cliente.get().getId());
+
+        emprestimos.forEach(e->{
+            if(e.getId() == request.getId()){
+                if(e.getStatus() == request.getStatus()){
+                    throw new InputMismatchException("Request invalido");
+                }
+                e.setStatus(request.getStatus());
+                emprestimoRepository.save(e);
+            }
+        });
+
+    }
 
 
 }

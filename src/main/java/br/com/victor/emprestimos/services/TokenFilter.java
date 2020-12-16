@@ -17,8 +17,8 @@ import java.io.IOException;
 
 public class TokenFilter extends OncePerRequestFilter {
 
-    private final TokenService tokenService;
-    private final ClienteRepository repository;
+    private TokenService tokenService;
+    private ClienteRepository repository;
 
     public TokenFilter(TokenService tokenService, ClienteRepository repository) {
         this.tokenService = tokenService;
