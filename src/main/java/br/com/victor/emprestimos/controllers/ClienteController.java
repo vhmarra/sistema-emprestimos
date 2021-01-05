@@ -1,6 +1,5 @@
 package br.com.victor.emprestimos.controllers;
 
-import br.com.victor.emprestimos.dtos.AlteraEmprestimoRequest;
 import br.com.victor.emprestimos.dtos.CadastraClienteRequest;
 import br.com.victor.emprestimos.dtos.ClienteAlteraEmprestimoRequest;
 import br.com.victor.emprestimos.dtos.EmprestimoDto;
@@ -10,7 +9,6 @@ import br.com.victor.emprestimos.exceptions.InvalidTokenException;
 import br.com.victor.emprestimos.services.ClienteService;
 import br.com.victor.emprestimos.services.EmprestimoService;
 import br.com.victor.emprestimos.services.TokenService;
-import io.swagger.annotations.ApiParam;
 import org.apache.tomcat.websocket.AuthenticationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.transaction.InvalidTransactionException;
@@ -42,9 +41,13 @@ public class ClienteController {
         this.emprestimoService = emprestimoService;
     }
 
+    @GetMapping("/hello")
+    public String hello(@RequestParam(name = "valor",defaultValue = "teste") String valor){
+        return ResponseEntity.ok(String.format("Hello %s",valor)).getBody();
+    }
+
     @Transactional
     @PostMapping("cadastro")
-    @ApiParam
     public ResponseEntity<?> cadastraCliente(@ModelAttribute CadastraClienteRequest request) throws Exception {
         service.cadastraCliente(request);
         return ResponseEntity.status(201).build();
