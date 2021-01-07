@@ -1,15 +1,16 @@
 package br.com.victor.emprestimos.repository;
 
 import br.com.victor.emprestimos.domain.Cliente;
-import br.com.victor.emprestimos.domain.Emprestimo;
+import br.com.victor.emprestimos.domain.TokenCliente;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ClienteRepository extends JpaRepository<Cliente,Long> {
+public interface TokenRepository extends JpaRepository<TokenCliente,Long> {
 
-    Optional<Cliente> findByCpfAndSenha(String cpf,String senha);
+    Optional<TokenCliente> findByCliente_Id(Long id);
+    Optional<TokenCliente> findByToken(String token);
+
 }
