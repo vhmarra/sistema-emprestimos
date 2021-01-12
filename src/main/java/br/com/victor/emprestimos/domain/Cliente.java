@@ -37,7 +37,7 @@ public class Cliente {
     @Column(name = "score_credito")
     private Double scoreCredito;
 
-    @OneToMany
+    @OneToMany(fetch = FetchType.EAGER)
     private List<Emprestimo> emprestimos;
 
     @ManyToMany

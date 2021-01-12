@@ -12,6 +12,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -29,7 +30,7 @@ public class TokenCliente {
     private Boolean ativo;
 
     @Column(name = "data_criacao")
-    private LocalDate dataCriacao;
+    private LocalDateTime dataCriacao;
 
     @ManyToOne(fetch = FetchType.EAGER,optional = false)
     @JoinColumn(name = "cliente_id", nullable = false)

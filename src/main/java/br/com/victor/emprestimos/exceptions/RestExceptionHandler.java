@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 
@@ -27,6 +28,18 @@ public class RestExceptionHandler {
     public ResponseEntity<?> handleInvalidTokenException(Exception ex) {
         log.error(ex.getMessage(), ex);
         return new ResponseEntity(new ErrorResponse(ex.getMessage(), 403L),new HttpHeaders(), FORBIDDEN);
+    }
+
+    @ExceptionHandler({ InvalidClienteException.class })
+    public ResponseEntity<?> handleInvalidClienteException(Exception ex) {
+        log.error(ex.getMessage(), ex);
+        return new ResponseEntity(new ErrorResponse(ex.getMessage(), 403L),new HttpHeaders(), FORBIDDEN);
+    }
+
+    @ExceptionHandler({ InvalidInputException.class })
+    public ResponseEntity<?> handleInvalidInputException(Exception ex) {
+        log.error(ex.getMessage(), ex);
+        return new ResponseEntity(new ErrorResponse(ex.getMessage(), 400L),new HttpHeaders(), BAD_REQUEST);
     }
 
     @ExceptionHandler({ InvalidCredencialsException.class })
