@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 public class PerfilService {
 
-    private final PerfilRepository perfilRepository;
+    private PerfilRepository perfilRepository;
 
     public PerfilService(PerfilRepository perfilRepository) {
         this.perfilRepository = perfilRepository;
@@ -32,6 +32,10 @@ public class PerfilService {
             Perfis perfil1 = new Perfis();
             Perfis perfil2 = new Perfis();
             Perfis perfil3 = new Perfis();
+
+            perfil1.setNome("user");
+            perfil2.setNome("adm");
+            perfil3.setNome("super_adm");
 
             perfis.add(perfil1);
             perfis.add(perfil2);

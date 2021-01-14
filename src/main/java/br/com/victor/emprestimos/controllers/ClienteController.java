@@ -34,38 +34,26 @@ public class ClienteController {
         this.emprestimoService = emprestimoService;
     }
 
-    @PostMapping("cadastra")
-    public ResponseEntity<?> cadastraCliente(@ModelAttribute CadastraClienteRequest request){
-        clienteService.cadastraCliente(request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
-
-    @PostMapping("autentica")
-    public ResponseEntity<?> autentica(@RequestHeader String cpf, @RequestHeader String senha){
-        clienteService.autentica(cpf,senha);
-        return ResponseEntity.ok().build();
-    }
-
     @PostMapping("solicita-emprestimo")
     public ResponseEntity<?> solicitaEmprestimo(@RequestHeader String token, @ModelAttribute EmprestimoRequest request) throws InvalidTokenException, InvalidInputException, InvalidCredencialsException {
         emprestimoService.solicitaEmprestimo(token,request);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("update-all-emprestimos")
-    public ResponseEntity<?> updateAllEmprestimos(@RequestHeader String token, @RequestHeader StatusEmprestimo status) throws InvalidCredencialsException {
-        emprestimoService.updateAllEmprestimos(token,status);
-        return ResponseEntity.ok().build();
-    }
-
     @GetMapping("get-all")
-    public List<Cliente> getAll(@RequestHeader String token) throws InvalidCredencialsException {
+    public List<?> getAll(@RequestHeader String token) throws InvalidCredencialsException {
         return clienteService.findAll(token);
     }
 
     @GetMapping("get-data")
     public ClienteDataDTO getDataIfSuper(@RequestHeader String tokenCliente, @RequestHeader String tokenAdmin) throws InvalidCredencialsException {
         return clienteService.getDataIfSuperAdmin(tokenAdmin,tokenCliente);
+    }
+
+    @PostMapping("updata-emprestimo")
+    public ResponseEntity<?> updateEmprestimo(@RequestHeader String token, @RequestHeader Long id, @RequestHeader StatusEmprestimo status) throws InvalidInputException, InvalidCredencialsException, InvalidTokenException {
+        emprestimoService.updateEmprestimo(token,id,status);
+        return ResponseEntity.ok().build();
     }
 
 }

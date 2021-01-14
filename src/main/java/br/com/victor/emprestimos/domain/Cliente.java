@@ -1,8 +1,11 @@
 package br.com.victor.emprestimos.domain;
 
 import lombok.Data;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -40,8 +43,18 @@ public class Cliente {
     @OneToMany(fetch = FetchType.EAGER)
     private List<Emprestimo> emprestimos;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private List<Perfis> perfis;
 
-
+    @Override
+    public String toString() {
+        return "Cliente{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                ", cpf='" + cpf + '\'' +
+                ", senha='" + senha + '\'' +
+                ", scoreCredito=" + scoreCredito +
+                ", perfis=" + perfis +
+                '}';
+    }
 }

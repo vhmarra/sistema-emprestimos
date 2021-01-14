@@ -24,14 +24,4 @@ public class Perfis {
     @Column(name = "role_name")
     private String nome;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    private List<Cliente> cliente;
-
-    @Override
-    public String toString() {
-        return "Perfis{" +
-                "id=" + id +
-                ", nome='" + nome + '\'' +
-                '}';
-    }
 }
