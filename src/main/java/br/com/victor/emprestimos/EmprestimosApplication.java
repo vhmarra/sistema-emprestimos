@@ -12,7 +12,6 @@ import javax.persistence.Entity;
 @SpringBootApplication
 @EnableJpaRepositories
 @EntityScan(basePackages = {"br.com.victor.emprestimos.domain"})
-@Profile("dev")
 public class EmprestimosApplication {
 
 	public static void main(String[] args) {

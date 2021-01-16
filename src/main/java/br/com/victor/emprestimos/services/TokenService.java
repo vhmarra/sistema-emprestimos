@@ -82,4 +82,13 @@ public class TokenService {
         log.info("------TOKENS REMOVIDOS------");
     }
 
+    public Long findClienteIdByToken(String token) throws InvalidCredencialsException {
+        TokenCliente tokenCliente = tokenRepository.findByToken(token).orElse(null);
+        if(tokenCliente == null){
+            throw new InvalidCredencialsException("token invalido");
+        }
+        return tokenCliente.getCliente().getId();
+    }
+
+
 }

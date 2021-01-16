@@ -4,6 +4,7 @@ import br.com.victor.emprestimos.domain.Cliente;
 import br.com.victor.emprestimos.domain.Emprestimo;
 import br.com.victor.emprestimos.domain.Historico;
 import br.com.victor.emprestimos.domain.HistoricoCliente;
+import br.com.victor.emprestimos.dtos.EmprestimoDto;
 import br.com.victor.emprestimos.dtos.EmprestimoRequest;
 import br.com.victor.emprestimos.enums.HistoricoClienteEnum;
 import br.com.victor.emprestimos.enums.StatusEmprestimo;
@@ -19,7 +20,9 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -123,4 +126,19 @@ public class EmprestimoService {
         clienteRepository.save(cliente);
     }
 
+
+    public List<EmprestimoDto> getAllByToken(String token) throws InvalidCredencialsException {
+        List<Emprestimo> emprestimos = emprestimoRepository.findAllByClienteId(tokenService.findClienteIdByToken(token));
+        List<EmprestimoDto> response = new ArrayList<>();
+
+        emprestimos.forEach(e->{
+            EmprestimoDto dto = new EmprestimoDto();
+            dto.setStatus(e.getStatus().toString());
+            dto.setValor(e.getValor());
+            dto.setId(e.getId());
+            dto.setDataSolicitacao(e.getDataSolicitacao());
+            response.add(dto);
+        });
+        return response;
+    }
 }

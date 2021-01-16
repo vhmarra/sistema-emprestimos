@@ -3,6 +3,7 @@ package br.com.victor.emprestimos.controllers;
 import br.com.victor.emprestimos.domain.Cliente;
 import br.com.victor.emprestimos.dtos.CadastraClienteRequest;
 import br.com.victor.emprestimos.dtos.ClienteDataDTO;
+import br.com.victor.emprestimos.dtos.EmprestimoDto;
 import br.com.victor.emprestimos.dtos.EmprestimoRequest;
 import br.com.victor.emprestimos.enums.StatusEmprestimo;
 import br.com.victor.emprestimos.exceptions.InvalidCredencialsException;
@@ -13,12 +14,7 @@ import br.com.victor.emprestimos.services.ClienteService;
 import br.com.victor.emprestimos.services.EmprestimoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -50,10 +46,15 @@ public class ClienteController {
         return clienteService.getDataIfSuperAdmin(tokenAdmin,tokenCliente);
     }
 
-    @PostMapping("updata-emprestimo")
+    @PostMapping("update-emprestimo")
     public ResponseEntity<?> updateEmprestimo(@RequestHeader String token, @RequestHeader Long id, @RequestHeader StatusEmprestimo status) throws InvalidInputException, InvalidCredencialsException, InvalidTokenException {
         emprestimoService.updateEmprestimo(token,id,status);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("all-by-cliente-token")
+    public ResponseEntity<List<EmprestimoDto>> getAllByClienteToken(@RequestHeader String token) throws InvalidCredencialsException {
+        return ResponseEntity.ok(emprestimoService.getAllByToken(token));
     }
 
 }
