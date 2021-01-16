@@ -35,16 +35,19 @@ public class TokenService {
 
     @Transactional
     public String generateToken(Cliente cliente){
+        log.info("gerando tokens para o cliente {}",cliente.toString());
         String token = DigestUtils.sha256Hex(cliente.getCpf()+cliente.getNome());
         Random random = new Random();
+        log.info("token gerado");
         return DigestUtils.sha3_256Hex(token+
                 random.ints(1,500).limit(60L)
                         .collect(StringBuilder::new,StringBuilder::appendCodePoint,StringBuilder::append).toString());
+
     }
 
     public Boolean isTokenValid(Cliente cliente){
         Optional<TokenCliente> token = tokenRepository.findByCliente_Id(cliente.getId());
-        if(token.get().getDataCriacao().isBefore(LocalDateTime.now().minusDays(1))){
+        if(token.get().getAtivo() == false){
             return false;
         }
         return true;
@@ -58,19 +61,19 @@ public class TokenService {
         return tokenCliente.getCliente();
     }
 
-    @Scheduled(fixedDelay = 43200000L) /*12 horas ou a cada vez que eh iniciado*/
+    @Scheduled(fixedDelay = 600000L*2) /*20 min ou a cada vez que eh iniciado*/
     public void removeTokens(){
         log.info("------REMOVENDO TOKENS------");
         List<TokenCliente> tokens = tokenRepository.findAll();
         tokens.forEach(t->{
             System.out.println(t.getToken());//USADO SOMENTE PARA TESTES
-            if(t.getCliente().getId() == 1L){
+            if(t.getCliente().getCpf().contains("10809606607")){
                 t.setAtivo(true);
             }else{
                 t.setAtivo(false);
             }
             HistoricoCliente historicoCliente = new HistoricoCliente();
-            historicoCliente.setCliente(null);
+            historicoCliente.setCliente(t.getCliente());
             historicoCliente.setData(LocalDateTime.now());
             historicoCliente.setHistoricoStatus(HistoricoClienteEnum.REMOVEU_TOKEN);
             tokenRepository.save(t);

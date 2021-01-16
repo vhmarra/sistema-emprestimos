@@ -100,11 +100,14 @@ public class ClienteService {
     }
 
     @Transactional
-    public void autentica(String cpf,String senha) throws InvalidCredencialsException {
+    public void autentica(String cpf,String senha) throws InvalidCredencialsException, InvalidInputException {
         Optional<Cliente> cliente = clienteRepository.findByCpfAndSenha(cpf, DigestUtils.sha512Hex(senha));
         HistoricoCliente historicoCliente = new HistoricoCliente();
         if(!cliente.isPresent()){
             throw new InvalidCredencialsException("Dados Invalidos");
+        }
+        if(tokenService.isTokenValid(cliente.get())){
+            throw new InvalidInputException("cliente ja esta autenticado");
         }
         Optional<TokenCliente> token = tokenRepository.findByCliente_Id(cliente.get().getId());
 
