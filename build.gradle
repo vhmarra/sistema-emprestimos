@@ -1,11 +1,11 @@
 plugins {
-	id 'org.springframework.boot' version '2.4.0'
-	id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+	id 'org.springframework.boot' version '2.4.1'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
 }
 
 group = 'br.com.victor'
-version = '0.0.1-SNAPSHOT'
+version = '0.9'
 sourceCompatibility = '11'
 
 configurations {
@@ -19,6 +19,7 @@ repositories {
 }
 
 dependencies {
+
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'junit:junit:4.12'
@@ -30,10 +31,7 @@ dependencies {
 	compile("io.springfox:springfox-swagger2:2.9.2")
 	compile("io.springfox:springfox-swagger-ui:2.9.2")
 	compile ('commons-codec:commons-codec:1.15')
-	// https://mvnrepository.com/artifact/javax.validation/validation-api
 	compile group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
-
-
 
 }
 

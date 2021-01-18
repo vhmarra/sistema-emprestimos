@@ -16,6 +16,8 @@ import br.com.victor.emprestimos.repository.EmprestimoRepository;
 import br.com.victor.emprestimos.repository.HistoricoClienteRepository;
 import br.com.victor.emprestimos.repository.HistoricoRepository;
 import br.com.victor.emprestimos.utils.Constants;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -26,6 +28,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Data
+@Slf4j
+@Transactional
 public class EmprestimoService {
 
     private TokenService tokenService;
@@ -47,7 +52,6 @@ public class EmprestimoService {
         this.historicoClienteRepository = historicoClienteRepository;
     }
 
-    @Transactional
     public void solicitaEmprestimo(String token, EmprestimoRequest request) throws InvalidTokenException,
             InvalidInputException, InvalidCredencialsException {
         Cliente cliente = tokenService.findClienteByToken(token);
@@ -90,7 +94,6 @@ public class EmprestimoService {
     }
 
 
-    @Transactional
     //TODO mudar logica para aceitacao do emprestimo
     public void updateEmprestimo(String token, Long idEmprestimo, StatusEmprestimo status) throws InvalidCredencialsException,
             InvalidInputException, InvalidTokenException {
@@ -98,6 +101,7 @@ public class EmprestimoService {
         Cliente cliente = tokenService.findClienteByToken(token);
         Optional<Emprestimo> emprestimo = emprestimoRepository.findById(idEmprestimo);
         Historico historico = new Historico();
+        HistoricoCliente historicoCliente = new HistoricoCliente();
 
         if(!tokenService.isTokenValid(cliente)){
             throw new InvalidTokenException("Token invalido, se autentique antes");
@@ -114,7 +118,7 @@ public class EmprestimoService {
             historicoRepository.save(historico);
 
         }
-        if(status == StatusEmprestimo.ACEITO && cliente.getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))){
+        if(status == StatusEmprestimo.ACEITO){
             emprestimo.get().setStatus(status);
             emprestimoRepository.save(emprestimo.get());
             historico.setStatus(status);
@@ -122,13 +126,21 @@ public class EmprestimoService {
             historico.setDataUpdate(LocalDateTime.now());
             historicoRepository.save(historico);
         }
-        cliente.setEmprestimos(Arrays.asList(emprestimo.get()));
-        clienteRepository.save(cliente);
+        historicoCliente.setCliente(cliente);
+        historicoCliente.setHistoricoStatus(HistoricoClienteEnum.ALTEROU_EMPRESTIMO);
+        historicoCliente.setData(LocalDateTime.now());
+        historicoClienteRepository.save(historicoCliente);
     }
 
 
     public List<EmprestimoDto> getAllByToken(String token) throws InvalidCredencialsException {
-        List<Emprestimo> emprestimos = emprestimoRepository.findAllByClienteId(tokenService.findClienteIdByToken(token));
+        Cliente cliente = tokenService.findClienteByToken(token);
+
+        if(cliente == null){
+            throw new InvalidCredencialsException("cliente nao encontrado");
+        }
+
+        List<Emprestimo> emprestimos = emprestimoRepository.findAllByClienteId(cliente.getId());
         List<EmprestimoDto> response = new ArrayList<>();
 
         emprestimos.forEach(e->{

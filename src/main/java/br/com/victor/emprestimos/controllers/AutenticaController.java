@@ -31,8 +31,7 @@ public class AutenticaController {
 
     @PostMapping("autentica")
     public ResponseEntity<?> autentica(@RequestHeader String cpf, @RequestHeader String senha) throws InvalidCredencialsException, InvalidInputException {
-        clienteService.autentica(cpf,senha);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(clienteService.autentica(cpf,senha));
     }
 
 }

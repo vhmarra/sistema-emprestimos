@@ -3,6 +3,7 @@ package br.com.victor.emprestimos.services;
 import br.com.victor.emprestimos.domain.Perfis;
 import br.com.victor.emprestimos.repository.PerfilRepository;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -11,6 +12,8 @@ import java.util.List;
 
 @Service
 @Data
+@Transactional
+@Slf4j
 public class PerfilService {
 
     private PerfilRepository perfilRepository;
@@ -19,14 +22,14 @@ public class PerfilService {
         this.perfilRepository = perfilRepository;
     }
 
-    @Transactional
+
     public Perfis findById(Long id){
         return perfilRepository.findById(id).get();
     }
 
-    @Transactional
     public void createProfiles() {
         if (perfilRepository.findAll().isEmpty()) {
+            log.info("criando perfis");
             List<Perfis> perfis = new ArrayList<>();
 
             Perfis perfil1 = new Perfis();
@@ -42,7 +45,9 @@ public class PerfilService {
             perfis.add(perfil3);
 
             perfilRepository.saveAll(perfis);
-
+            log.info("perfis criado");
+        }else {
+            log.info("perfis ja existentes");
         }
     }
 }

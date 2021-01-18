@@ -7,8 +7,10 @@ import br.com.victor.emprestimos.enums.HistoricoClienteEnum;
 import br.com.victor.emprestimos.exceptions.InvalidCredencialsException;
 import br.com.victor.emprestimos.repository.HistoricoClienteRepository;
 import br.com.victor.emprestimos.repository.TokenRepository;
+import br.com.victor.emprestimos.utils.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -33,7 +35,6 @@ public class TokenService {
         this.historicoRepository = historicoRepository;
     }
 
-    @Transactional
     public String generateToken(Cliente cliente){
         log.info("gerando tokens para o cliente {}",cliente.toString());
         String token = DigestUtils.sha256Hex(cliente.getCpf()+cliente.getNome());
@@ -61,7 +62,8 @@ public class TokenService {
         return tokenCliente.getCliente();
     }
 
-    @Scheduled(fixedDelay = 600000L*2) /*20 min ou a cada vez que eh iniciado*/
+
+    @Scheduled(cron = Constants.TOKEN_EXPIRATION_TIME_1_MIN_CRON) /*20 min ou a cada vez que eh iniciado*/
     public void removeTokens(){
         log.info("------REMOVENDO TOKENS------");
         List<TokenCliente> tokens = tokenRepository.findAll();
@@ -71,6 +73,7 @@ public class TokenService {
                 t.setAtivo(true);
             }else{
                 t.setAtivo(false);
+                t.setDataAtualizado(LocalDateTime.now());
             }
             HistoricoCliente historicoCliente = new HistoricoCliente();
             historicoCliente.setCliente(t.getCliente());
@@ -84,11 +87,11 @@ public class TokenService {
 
     public Long findClienteIdByToken(String token) throws InvalidCredencialsException {
         TokenCliente tokenCliente = tokenRepository.findByToken(token).orElse(null);
+
         if(tokenCliente == null){
             throw new InvalidCredencialsException("token invalido");
         }
         return tokenCliente.getCliente().getId();
     }
-
 
 }

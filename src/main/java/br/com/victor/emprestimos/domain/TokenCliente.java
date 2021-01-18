@@ -32,6 +32,9 @@ public class TokenCliente {
     @Column(name = "data_criacao")
     private LocalDateTime dataCriacao;
 
+    @Column(name = "data_atualizado")
+    private LocalDateTime dataAtualizado;
+
     @ManyToOne(fetch = FetchType.EAGER,optional = false)
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;

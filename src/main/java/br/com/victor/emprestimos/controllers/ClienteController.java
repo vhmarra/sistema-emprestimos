@@ -52,7 +52,7 @@ public class ClienteController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("all-by-cliente-token")
+    @GetMapping("emprestimos-by-cliente-token")
     public ResponseEntity<List<EmprestimoDto>> getAllByClienteToken(@RequestHeader String token) throws InvalidCredencialsException {
         return ResponseEntity.ok(emprestimoService.getAllByToken(token));
     }

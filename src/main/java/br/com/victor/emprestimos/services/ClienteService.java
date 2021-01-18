@@ -16,6 +16,8 @@ import br.com.victor.emprestimos.repository.HistoricoClienteRepository;
 import br.com.victor.emprestimos.repository.PerfilRepository;
 import br.com.victor.emprestimos.repository.TokenRepository;
 import br.com.victor.emprestimos.utils.Constants;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +29,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Data
+@Transactional
+@Slf4j
 public class ClienteService {
 
     private ClienteRepository clienteRepository;
@@ -50,7 +55,6 @@ public class ClienteService {
     }
 
 
-    @Transactional
     public void cadastraCliente(CadastraClienteRequest request) throws InvalidInputException {
         if(!clienteRepository.findByCpf(request.getCpf()).isEmpty()){
             throw new InvalidInputException("Cliente ja possui cadastro");
@@ -99,8 +103,7 @@ public class ClienteService {
 
     }
 
-    @Transactional
-    public void autentica(String cpf,String senha) throws InvalidCredencialsException, InvalidInputException {
+    public String autentica(String cpf,String senha) throws InvalidCredencialsException, InvalidInputException {
         Optional<Cliente> cliente = clienteRepository.findByCpfAndSenha(cpf, DigestUtils.sha512Hex(senha));
         HistoricoCliente historicoCliente = new HistoricoCliente();
         if(!cliente.isPresent()){
@@ -113,6 +116,7 @@ public class ClienteService {
 
         token.get().setAtivo(true);
         token.get().setDataCriacao(LocalDateTime.now());
+        token.get().setDataAtualizado(LocalDateTime.now());
         token.get().setToken(tokenService.generateToken(cliente.get()));
 
         historicoCliente.setCliente(cliente.get());
@@ -122,10 +126,10 @@ public class ClienteService {
         tokenRepository.save(token.get());
         historicoClienteRepository.save(historicoCliente);
 
+        return tokenRepository.findByCliente_Id(cliente.get().getId()).get().getToken();
+
     }
 
-
-    @Transactional
     public List<Cliente> findAll(String token) throws InvalidCredencialsException {
         Cliente cliente = tokenService.findClienteByToken(token);
         if(!cliente.getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))){
@@ -137,7 +141,6 @@ public class ClienteService {
 
     }
 
-    @Transactional
     public ClienteDataDTO getDataIfSuperAdmin(String tokenAdm, String tokenCliente) throws InvalidCredencialsException {
         if(tokenService.findClienteByToken(tokenAdm).getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))){
             Cliente cliente = tokenService.findClienteByToken(tokenCliente);

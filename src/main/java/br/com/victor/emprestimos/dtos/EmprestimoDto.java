@@ -13,9 +13,6 @@ import java.time.LocalDateTime;
 @Data
 public class EmprestimoDto {
 
-    //@JsonProperty(value = "nome-cliente")
-    //private String nomecliente;
-
     private Long id;
     private Double valor;
     private String status;
