@@ -15,7 +15,7 @@ import br.com.victor.emprestimos.repository.ClienteRepository;
 import br.com.victor.emprestimos.repository.EmprestimoRepository;
 import br.com.victor.emprestimos.repository.HistoricoClienteRepository;
 import br.com.victor.emprestimos.repository.HistoricoRepository;
-import br.com.victor.emprestimos.utils.Constants;
+import br.com.victor.emprestimos.utils.TokenTheadService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,7 +30,7 @@ import java.util.Optional;
 @Data
 @Slf4j
 @Transactional
-public class EmprestimoService {
+public class EmprestimoService extends TokenTheadService {
 
     private TokenService tokenService;
     private EmprestimoRepository emprestimoRepository;
@@ -39,6 +38,7 @@ public class EmprestimoService {
     private HistoricoRepository historicoRepository;
     private PerfilService perfilService;
     private HistoricoClienteRepository historicoClienteRepository;
+
 
 
     public EmprestimoService(TokenService tokenService, EmprestimoRepository emprestimoRepository,
@@ -52,9 +52,9 @@ public class EmprestimoService {
         this.historicoClienteRepository = historicoClienteRepository;
     }
 
-    public void solicitaEmprestimo(String token, EmprestimoRequest request) throws InvalidTokenException,
+    public void solicitaEmprestimo(EmprestimoRequest request) throws InvalidTokenException,
             InvalidInputException, InvalidCredencialsException {
-        Cliente cliente = tokenService.findClienteByToken(token);
+        Cliente cliente = tokenService.findClienteByToken(getToken());
 
 
         if(!tokenService.isTokenValid(cliente)){
@@ -95,10 +95,10 @@ public class EmprestimoService {
 
 
     //TODO mudar logica para aceitacao do emprestimo
-    public void updateEmprestimo(String token, Long idEmprestimo, StatusEmprestimo status) throws InvalidCredencialsException,
+    public void updateEmprestimo(Long idEmprestimo, StatusEmprestimo status) throws InvalidCredencialsException,
             InvalidInputException, InvalidTokenException {
 
-        Cliente cliente = tokenService.findClienteByToken(token);
+        Cliente cliente = tokenService.findClienteByToken(getToken());
         Optional<Emprestimo> emprestimo = emprestimoRepository.findById(idEmprestimo);
         Historico historico = new Historico();
         HistoricoCliente historicoCliente = new HistoricoCliente();
@@ -133,8 +133,8 @@ public class EmprestimoService {
     }
 
 
-    public List<EmprestimoDto> getAllByToken(String token) throws InvalidCredencialsException {
-        Cliente cliente = tokenService.findClienteByToken(token);
+    public List<EmprestimoDto> getAllByToken() throws InvalidCredencialsException {
+        Cliente cliente = tokenService.findClienteByToken(getToken());
 
         if(cliente == null){
             throw new InvalidCredencialsException("cliente nao encontrado");

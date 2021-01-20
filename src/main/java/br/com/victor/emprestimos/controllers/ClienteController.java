@@ -31,30 +31,30 @@ public class ClienteController {
     }
 
     @PostMapping("solicita-emprestimo")
-    public ResponseEntity<?> solicitaEmprestimo(@RequestHeader String token, @ModelAttribute EmprestimoRequest request) throws InvalidTokenException, InvalidInputException, InvalidCredencialsException {
-        emprestimoService.solicitaEmprestimo(token,request);
+    public ResponseEntity<?> solicitaEmprestimo(@RequestHeader String token, @RequestHeader @ModelAttribute EmprestimoRequest valor) throws InvalidTokenException, InvalidInputException, InvalidCredencialsException {
+        emprestimoService.solicitaEmprestimo(valor);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("get-all")
     public List<?> getAll(@RequestHeader String token) throws InvalidCredencialsException {
-        return clienteService.findAll(token);
+        return clienteService.findAll();
     }
 
     @GetMapping("get-data")
-    public ClienteDataDTO getDataIfSuper(@RequestHeader String tokenCliente, @RequestHeader String tokenAdmin) throws InvalidCredencialsException {
-        return clienteService.getDataIfSuperAdmin(tokenAdmin,tokenCliente);
+    public ClienteDataDTO getDataIfSuper(@RequestHeader String tokenCliente, @RequestHeader String token) throws InvalidCredencialsException {
+        return clienteService.getDataIfSuperAdmin(token,tokenCliente);
     }
 
     @PostMapping("update-emprestimo")
     public ResponseEntity<?> updateEmprestimo(@RequestHeader String token, @RequestHeader Long id, @RequestHeader StatusEmprestimo status) throws InvalidInputException, InvalidCredencialsException, InvalidTokenException {
-        emprestimoService.updateEmprestimo(token,id,status);
+        emprestimoService.updateEmprestimo(id,status);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("emprestimos-by-cliente-token")
     public ResponseEntity<List<EmprestimoDto>> getAllByClienteToken(@RequestHeader String token) throws InvalidCredencialsException {
-        return ResponseEntity.ok(emprestimoService.getAllByToken(token));
+        return ResponseEntity.ok(emprestimoService.getAllByToken());
     }
 
 }

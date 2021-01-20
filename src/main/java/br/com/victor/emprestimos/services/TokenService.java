@@ -10,7 +10,6 @@ import br.com.victor.emprestimos.repository.TokenRepository;
 import br.com.victor.emprestimos.utils.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -37,18 +36,18 @@ public class TokenService {
 
     public String generateToken(Cliente cliente){
         log.info("gerando tokens para o cliente {}",cliente.toString());
-        String token = DigestUtils.sha256Hex(cliente.getCpf()+cliente.getNome());
         Random random = new Random();
-        log.info("token gerado");
-        return DigestUtils.sha3_256Hex(token+
+        String token = DigestUtils.sha3_256Hex(DigestUtils.sha256Hex(cliente.getCpf()+cliente.getNome())+
                 random.ints(1,500).limit(60L)
                         .collect(StringBuilder::new,StringBuilder::appendCodePoint,StringBuilder::append).toString());
+        log.info("Token gerado {}",token);
+        return token;
 
     }
 
     public Boolean isTokenValid(Cliente cliente){
         Optional<TokenCliente> token = tokenRepository.findByCliente_Id(cliente.getId());
-        if(token.get().getAtivo() == false){
+        if(!token.get().getAtivo()){
             return false;
         }
         return true;
@@ -63,7 +62,6 @@ public class TokenService {
     }
 
 
-    @Scheduled(cron = Constants.TOKEN_EXPIRATION_TIME_1_MIN_CRON) /*20 min ou a cada vez que eh iniciado*/
     public void removeTokens(){
         log.info("------REMOVENDO TOKENS------");
         List<TokenCliente> tokens = tokenRepository.findAll();

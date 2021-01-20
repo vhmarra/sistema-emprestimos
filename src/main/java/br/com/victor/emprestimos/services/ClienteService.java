@@ -1,7 +1,6 @@
 package br.com.victor.emprestimos.services;
 
 import br.com.victor.emprestimos.domain.Cliente;
-import br.com.victor.emprestimos.domain.Emprestimo;
 import br.com.victor.emprestimos.domain.HistoricoCliente;
 import br.com.victor.emprestimos.domain.Perfis;
 import br.com.victor.emprestimos.domain.TokenCliente;
@@ -16,7 +15,8 @@ import br.com.victor.emprestimos.repository.HistoricoClienteRepository;
 import br.com.victor.emprestimos.repository.PerfilRepository;
 import br.com.victor.emprestimos.repository.TokenRepository;
 import br.com.victor.emprestimos.utils.Constants;
-import lombok.Data;
+import br.com.victor.emprestimos.utils.TokenTheadService;
+import br.com.victor.emprestimos.utils.TokenThread;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
@@ -29,10 +29,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@Data
 @Transactional
 @Slf4j
-public class ClienteService {
+public class ClienteService extends TokenTheadService {
 
     private ClienteRepository clienteRepository;
     private EmprestimoRepository emprestimoRepository;
@@ -59,7 +58,6 @@ public class ClienteService {
         if(!clienteRepository.findByCpf(request.getCpf()).isEmpty()){
             throw new InvalidInputException("Cliente ja possui cadastro");
         }
-
         perfilService.createProfiles();
         Cliente cliente = new Cliente();
         TokenCliente acessToken = new TokenCliente();
@@ -106,7 +104,7 @@ public class ClienteService {
     public String autentica(String cpf,String senha) throws InvalidCredencialsException, InvalidInputException {
         Optional<Cliente> cliente = clienteRepository.findByCpfAndSenha(cpf, DigestUtils.sha512Hex(senha));
         HistoricoCliente historicoCliente = new HistoricoCliente();
-        if(!cliente.isPresent()){
+        if(cliente.isEmpty()){
             throw new InvalidCredencialsException("Dados Invalidos");
         }
         if(tokenService.isTokenValid(cliente.get())){
@@ -125,13 +123,13 @@ public class ClienteService {
 
         tokenRepository.save(token.get());
         historicoClienteRepository.save(historicoCliente);
-
-        return tokenRepository.findByCliente_Id(cliente.get().getId()).get().getToken();
+        TokenThread.setToken(token.get());
+        return getToken();
 
     }
 
-    public List<Cliente> findAll(String token) throws InvalidCredencialsException {
-        Cliente cliente = tokenService.findClienteByToken(token);
+    public List<Cliente> findAll() throws InvalidCredencialsException {
+        Cliente cliente = tokenService.findClienteByToken(getToken());
         if(!cliente.getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))){
             throw new InvalidCredencialsException("usuario sem permissao");
         }
@@ -141,8 +139,8 @@ public class ClienteService {
 
     }
 
-    public ClienteDataDTO getDataIfSuperAdmin(String tokenAdm, String tokenCliente) throws InvalidCredencialsException {
-        if(tokenService.findClienteByToken(tokenAdm).getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))){
+    public ClienteDataDTO getDataIfSuperAdmin(String token, String tokenCliente) throws InvalidCredencialsException {
+        if(tokenService.findClienteByToken(getToken()).getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))){
             Cliente cliente = tokenService.findClienteByToken(tokenCliente);
             ClienteDataDTO dto = new ClienteDataDTO();
 
