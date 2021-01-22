@@ -8,10 +8,10 @@ import br.com.victor.emprestimos.exceptions.InvalidCredencialsException;
 import br.com.victor.emprestimos.repository.HistoricoClienteRepository;
 import br.com.victor.emprestimos.repository.TokenRepository;
 import br.com.victor.emprestimos.utils.Constants;
+import br.com.victor.emprestimos.utils.TokenTheadService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -24,14 +24,16 @@ import java.util.Random;
 @Transactional
 @EnableScheduling
 @Slf4j
-public class TokenService {
+public class TokenService extends TokenTheadService {
 
     private TokenRepository tokenRepository;
     private HistoricoClienteRepository historicoRepository;
+    private PerfilService perfilService;
 
-    public TokenService(TokenRepository tokenRepository, HistoricoClienteRepository historicoRepository) {
+    public TokenService(TokenRepository tokenRepository, HistoricoClienteRepository historicoRepository, PerfilService perfilService) {
         this.tokenRepository = tokenRepository;
         this.historicoRepository = historicoRepository;
+        this.perfilService = perfilService;
     }
 
     public String generateToken(Cliente cliente){
@@ -61,8 +63,10 @@ public class TokenService {
         return tokenCliente.getCliente();
     }
 
-
-    public void removeTokens(){
+    public void removeTokens() throws InvalidCredencialsException {
+        if(!tokenRepository.findByToken(getToken()).get().getCliente().getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))){
+            throw new InvalidCredencialsException("Sem permissao de super adm");
+        }
         log.info("------REMOVENDO TOKENS------");
         List<TokenCliente> tokens = tokenRepository.findAll();
         tokens.forEach(t->{
@@ -83,13 +87,6 @@ public class TokenService {
         log.info("------TOKENS REMOVIDOS------");
     }
 
-    public Long findClienteIdByToken(String token) throws InvalidCredencialsException {
-        TokenCliente tokenCliente = tokenRepository.findByToken(token).orElse(null);
 
-        if(tokenCliente == null){
-            throw new InvalidCredencialsException("token invalido");
-        }
-        return tokenCliente.getCliente().getId();
-    }
 
 }
