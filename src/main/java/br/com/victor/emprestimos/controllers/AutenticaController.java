@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("auth")
 public class AutenticaController {
 
-    private ClienteService clienteService;
+    private final ClienteService clienteService;
 
     public AutenticaController(ClienteService clienteService) {
         this.clienteService = clienteService;

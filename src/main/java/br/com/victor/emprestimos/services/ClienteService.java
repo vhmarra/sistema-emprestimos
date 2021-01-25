@@ -1,12 +1,14 @@
 package br.com.victor.emprestimos.services;
 
 import br.com.victor.emprestimos.domain.Cliente;
+import br.com.victor.emprestimos.domain.Emprestimo;
 import br.com.victor.emprestimos.domain.HistoricoCliente;
 import br.com.victor.emprestimos.domain.Perfis;
 import br.com.victor.emprestimos.domain.TokenCliente;
 import br.com.victor.emprestimos.dtos.CadastraClienteRequest;
 import br.com.victor.emprestimos.dtos.ClienteDataDTO;
-import br.com.victor.emprestimos.enums.HistoricoClienteEnum;
+import br.com.victor.emprestimos.dtos.EmprestimoDto;
+import br.com.victor.emprestimos.enums.HistoricoAcoes;
 import br.com.victor.emprestimos.exceptions.InvalidCredencialsException;
 import br.com.victor.emprestimos.exceptions.InvalidInputException;
 import br.com.victor.emprestimos.repository.ClienteRepository;
@@ -22,6 +24,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,28 +36,31 @@ import java.util.Optional;
 @Slf4j
 public class ClienteService extends TokenTheadService {
 
-    private ClienteRepository clienteRepository;
-    private EmprestimoRepository emprestimoRepository;
-    private PerfilRepository perfilRepository;
-    private TokenService tokenService;
-    private TokenRepository tokenRepository;
-    private PerfilService perfilService;
-    private HistoricoClienteRepository historicoClienteRepository;
+    private final ClienteRepository clienteRepository;
+    private final EmprestimoRepository emprestimoRepository;
+    private final PerfilRepository perfilRepository;
+    private final TokenService tokenService;
+    private final TokenRepository tokenRepository;
+    private final PerfilService perfilService;
+    private final HistoricoClienteRepository historicoClienteRepository;
 
-    public ClienteService(ClienteRepository clienteRepository, PerfilRepository perfilRepository,
-                          TokenService tokenService, EmprestimoRepository emprestimoRepository,
-                          TokenRepository tokenRepository, PerfilService perfilService, HistoricoClienteRepository historicoClienteRepository) {
+
+    public ClienteService(ClienteRepository clienteRepository, EmprestimoRepository emprestimoRepository,
+                          PerfilRepository perfilRepository, TokenService tokenService, TokenRepository tokenRepository,
+                          PerfilService perfilService, HistoricoClienteRepository historicoClienteRepository) {
         this.clienteRepository = clienteRepository;
+        this.emprestimoRepository = emprestimoRepository;
         this.perfilRepository = perfilRepository;
         this.tokenService = tokenService;
-        this.emprestimoRepository = emprestimoRepository;
         this.tokenRepository = tokenRepository;
         this.perfilService = perfilService;
         this.historicoClienteRepository = historicoClienteRepository;
     }
 
 
-    public void cadastraCliente(CadastraClienteRequest request) throws InvalidInputException {
+    public void cadastraCliente(@Valid CadastraClienteRequest request) throws InvalidInputException {
+        log.info("cadastrando novo cliente...");
+
         if(!clienteRepository.findByCpf(request.getCpf()).isEmpty()){
             throw new InvalidInputException("Cliente ja possui cadastro");
         }
@@ -68,6 +74,7 @@ public class ClienteService extends TokenTheadService {
         cliente.setScoreCredito(request.getScoreCredito());
         cliente.setSenha(DigestUtils.sha512Hex(request.getSenha()));
         cliente.setCpf(request.getCpf());
+        cliente.setEmail(request.getEmail());
         cliente.setPerfis(Arrays.asList(perfilRepository.findById(Constants.ROLE_USER).get()));
 
         acessToken.setToken(tokenService.generateToken(cliente));
@@ -85,23 +92,27 @@ public class ClienteService extends TokenTheadService {
             cliente.setPerfis(perfis);
             acessToken.setAtivo(true);
         }
-
+        log.info("GERANDO HISTORICO");
         historicoCliente.setCliente(cliente);
-        historicoCliente.setHistoricoStatus(HistoricoClienteEnum.CADASTROU);
+        historicoCliente.setHistoricoStatus(HistoricoAcoes.CADASTROU);
         historicoCliente.setData(LocalDateTime.now());
 
         historicoCliente2.setCliente(cliente);
         historicoCliente2.setData(LocalDateTime.now());
-        historicoCliente2.setHistoricoStatus(HistoricoClienteEnum.GEROU_TOKEN);
+        historicoCliente2.setHistoricoStatus(HistoricoAcoes.GEROU_TOKEN);
+        log.info("HISTORICO GERADO");
 
+        log.info("SALVANDO DADOS");
         clienteRepository.save(cliente);
         tokenRepository.save(acessToken);
         historicoClienteRepository.save(historicoCliente);
         historicoClienteRepository.save(historicoCliente2);
+        log.info("DADOS SALVOS");
 
     }
 
     public String autentica(String cpf,String senha) throws InvalidCredencialsException, InvalidInputException {
+        log.info("AUTENTICANDO CLIENTE COM CPF {}",cpf);
         Optional<Cliente> cliente = clienteRepository.findByCpfAndSenha(cpf, DigestUtils.sha512Hex(senha));
         HistoricoCliente historicoCliente = new HistoricoCliente();
         if(cliente.isEmpty()){
@@ -118,38 +129,47 @@ public class ClienteService extends TokenTheadService {
         token.get().setToken(tokenService.generateToken(cliente.get()));
 
         historicoCliente.setCliente(cliente.get());
-        historicoCliente.setHistoricoStatus(HistoricoClienteEnum.AUTENTICACAO);
+        historicoCliente.setHistoricoStatus(HistoricoAcoes.AUTENTICACAO);
         historicoCliente.setData(LocalDateTime.now());
 
         tokenRepository.save(token.get());
         historicoClienteRepository.save(historicoCliente);
         TokenThread.setToken(token.get());
+        log.info("CLIENTE AUTENTICADO E TOKEN VALIDADO {} {}",cliente.get().getNome(),getToken());
         return getToken();
 
     }
 
     public List<Cliente> findAll() throws InvalidCredencialsException {
-        Cliente cliente = tokenService.findClienteByToken(getToken());
-        if(!cliente.getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))){
+        if(!getCliente().getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))){
             throw new InvalidCredencialsException("usuario sem permissao");
         }
         List<Cliente> clientes = clienteRepository.findAll();
 
         return clientes;
-
     }
 
-    public ClienteDataDTO getDataIfSuperAdmin(String token, String tokenCliente) throws InvalidCredencialsException {
-        if(tokenService.findClienteByToken(getToken()).getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))){
+    public ClienteDataDTO getDataIfSuperAdmin(String tokenCliente) throws InvalidCredencialsException {
+        if(getCliente().getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))){
             Cliente cliente = tokenService.findClienteByToken(tokenCliente);
+            List<Emprestimo> emprestimo = emprestimoRepository.findAllByClienteId(cliente.getId());
             ClienteDataDTO dto = new ClienteDataDTO();
+            List<EmprestimoDto> emprestimoDtos = new ArrayList<>();
 
             dto.setCpf(cliente.getCpf());
             dto.setNome(cliente.getNome());
             dto.setId(cliente.getId());
             dto.setSenha(cliente.getSenha().replace(cliente.getSenha(),"********************************"));
             dto.setPerfis(Arrays.asList(cliente.getPerfis().toString()));
-            dto.setEmprestimos(cliente.getEmprestimos());
+            emprestimo.forEach(e->{
+                EmprestimoDto edto = new EmprestimoDto();
+                edto.setDataSolicitacao(e.getDataSolicitacao());
+                edto.setValor(e.getValor());
+                edto.setId(e.getId());
+                edto.setStatus(e.getStatus().toString());
+                emprestimoDtos.add(edto);
+            });
+            dto.setEmprestimos(emprestimoDtos);
 
             return dto;
         }else{

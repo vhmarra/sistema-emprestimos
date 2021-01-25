@@ -1,6 +1,6 @@
 package br.com.victor.emprestimos.domain;
 
-import br.com.victor.emprestimos.enums.HistoricoClienteEnum;
+import br.com.victor.emprestimos.enums.HistoricoAcoes;
 import lombok.Data;
 
 import javax.persistence.Column;
@@ -27,7 +27,7 @@ public class HistoricoCliente {
 
     @Column(name = "tipo")
     @Enumerated(EnumType.STRING)
-    private HistoricoClienteEnum historicoStatus;
+    private HistoricoAcoes historicoStatus;
 
     @Column(name = "data")
     private LocalDateTime data;

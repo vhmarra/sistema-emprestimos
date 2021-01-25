@@ -48,5 +48,10 @@ public class RestExceptionHandler {
         return new ResponseEntity(new ErrorResponse(ex.getMessage(), 403L),new HttpHeaders(), FORBIDDEN);
     }
 
+    @ExceptionHandler({ ForbiddenException.class })
+    public ResponseEntity<?> handleForbiddenException(Exception ex) {
+        log.error(ex.getMessage(), ex);
+        return new ResponseEntity(new ErrorResponse(ex.getMessage(), 403L),new HttpHeaders(), FORBIDDEN);
+    }
 
 }

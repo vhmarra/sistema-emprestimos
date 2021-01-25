@@ -6,7 +6,7 @@ import br.com.victor.emprestimos.domain.Historico;
 import br.com.victor.emprestimos.domain.HistoricoCliente;
 import br.com.victor.emprestimos.dtos.EmprestimoDto;
 import br.com.victor.emprestimos.dtos.EmprestimoRequest;
-import br.com.victor.emprestimos.enums.HistoricoClienteEnum;
+import br.com.victor.emprestimos.enums.HistoricoAcoes;
 import br.com.victor.emprestimos.enums.StatusEmprestimo;
 import br.com.victor.emprestimos.exceptions.InvalidCredencialsException;
 import br.com.victor.emprestimos.exceptions.InvalidInputException;
@@ -32,18 +32,17 @@ import java.util.Optional;
 @Transactional
 public class EmprestimoService extends TokenTheadService {
 
-    private TokenService tokenService;
-    private EmprestimoRepository emprestimoRepository;
-    private ClienteRepository clienteRepository;
-    private HistoricoRepository historicoRepository;
-    private PerfilService perfilService;
-    private HistoricoClienteRepository historicoClienteRepository;
-
-
+    private final TokenService tokenService;
+    private final EmprestimoRepository emprestimoRepository;
+    private final ClienteRepository clienteRepository;
+    private final HistoricoRepository historicoRepository;
+    private final PerfilService perfilService;
+    private final HistoricoClienteRepository historicoClienteRepository;
 
     public EmprestimoService(TokenService tokenService, EmprestimoRepository emprestimoRepository,
-                             ClienteRepository clienteRepository, HistoricoRepository historicoRepository,
-                             PerfilService perfilService, HistoricoClienteRepository historicoClienteRepository) {
+                             ClienteRepository clienteRepository,
+                             HistoricoRepository historicoRepository, PerfilService perfilService,
+                             HistoricoClienteRepository historicoClienteRepository) {
         this.tokenService = tokenService;
         this.emprestimoRepository = emprestimoRepository;
         this.clienteRepository = clienteRepository;
@@ -82,7 +81,7 @@ public class EmprestimoService extends TokenTheadService {
 
         HistoricoCliente historicoCliente = new HistoricoCliente();
         historicoCliente.setCliente(cliente);
-        historicoCliente.setHistoricoStatus(HistoricoClienteEnum.SOLICITOU_EMPRESTIMO);
+        historicoCliente.setHistoricoStatus(HistoricoAcoes.SOLICITOU_EMPRESTIMO);
         historicoCliente.setData(LocalDateTime.now());
 
 
@@ -127,7 +126,7 @@ public class EmprestimoService extends TokenTheadService {
             historicoRepository.save(historico);
         }
         historicoCliente.setCliente(cliente);
-        historicoCliente.setHistoricoStatus(HistoricoClienteEnum.ALTEROU_EMPRESTIMO);
+        historicoCliente.setHistoricoStatus(HistoricoAcoes.ALTEROU_EMPRESTIMO);
         historicoCliente.setData(LocalDateTime.now());
         historicoClienteRepository.save(historicoCliente);
     }

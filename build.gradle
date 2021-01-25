@@ -32,6 +32,8 @@ dependencies {
 	compile("io.springfox:springfox-swagger-ui:2.9.2")
 	compile ('commons-codec:commons-codec:1.15')
 	compile group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
+	compile group: 'javax.mail', name: 'mail', version: '1.4.1'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 }
 

@@ -11,6 +11,7 @@ import br.com.victor.emprestimos.services.ClienteService;
 import br.com.victor.emprestimos.services.EmprestimoService;
 import br.com.victor.emprestimos.services.TokenService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,9 +25,9 @@ import java.util.List;
 @RestController
 public class ClienteController {
 
-    private ClienteService clienteService;
-    private EmprestimoService emprestimoService;
-    private TokenService tokenService;
+    private final ClienteService clienteService;
+    private final EmprestimoService emprestimoService;
+    private final TokenService tokenService;
 
     public ClienteController(ClienteService clienteService, EmprestimoService emprestimoService, TokenService tokenService) {
         this.clienteService = clienteService;
@@ -47,7 +48,7 @@ public class ClienteController {
 
     @GetMapping("get-data")
     public ClienteDataDTO getDataIfSuper(@RequestHeader String tokenCliente, @RequestHeader String token) throws InvalidCredencialsException {
-        return clienteService.getDataIfSuperAdmin(token,tokenCliente);
+        return clienteService.getDataIfSuperAdmin(tokenCliente);
     }
 
     @PostMapping("update-emprestimo")

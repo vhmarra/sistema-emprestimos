@@ -14,8 +14,12 @@ public class TokenTheadService {
     public String getToken(){
         return TokenThread.getToken().get().getToken();
     }
+
     public Cliente getCliente(){
         return TokenThread.getToken().get().getCliente();
     }
 
+    public TokenCliente getTokenEntity(){
+        return TokenThread.getToken().get();
+    }
 }

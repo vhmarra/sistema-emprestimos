@@ -34,16 +34,19 @@ public class Cliente {
     @Column(name = "cpf")
     private String cpf;
 
+    @Column(name = "email")
+    private String email;
+
     @Column(name = "senha")
     private String senha;
 
     @Column(name = "score_credito")
     private Double scoreCredito;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.LAZY)
     private List<Emprestimo> emprestimos;
 
-    @ManyToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     private List<Perfis> perfis;
 
     @Override
@@ -52,9 +55,21 @@ public class Cliente {
                 "id=" + id +
                 ", nome='" + nome + '\'' +
                 ", cpf='" + cpf + '\'' +
+                ", email='" + email + '\'' +
                 ", senha='" + senha + '\'' +
                 ", scoreCredito=" + scoreCredito +
                 ", perfis=" + perfis +
+                '}';
+    }
+
+    public String toStringForToken(){
+        return "{" +
+                "id=" + this.id +
+                ", nome='" + this.nome + '\'' +
+                ", cpf='" + this.cpf + '\'' +
+                ", email='" + this.email + '\'' +
+                ", senha='" + "***********************" + '\'' +
+                ", scoreCredito=" + this.scoreCredito +
                 '}';
     }
 }

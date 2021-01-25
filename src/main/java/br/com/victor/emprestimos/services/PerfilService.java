@@ -5,6 +5,7 @@ import br.com.victor.emprestimos.repository.PerfilRepository;
 import br.com.victor.emprestimos.utils.TokenTheadService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -17,7 +18,7 @@ import java.util.List;
 @Slf4j
 public class PerfilService extends TokenTheadService {
 
-    private PerfilRepository perfilRepository;
+    private final PerfilRepository perfilRepository;
 
     public PerfilService(PerfilRepository perfilRepository) {
         this.perfilRepository = perfilRepository;
