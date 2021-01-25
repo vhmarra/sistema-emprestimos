@@ -24,7 +24,6 @@ public class PerfilService extends TokenTheadService {
         this.perfilRepository = perfilRepository;
     }
 
-
     public Perfis findById(Long id){
         return perfilRepository.findById(id).get();
     }

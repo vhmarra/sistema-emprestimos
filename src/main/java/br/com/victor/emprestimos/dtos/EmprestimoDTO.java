@@ -11,7 +11,7 @@ import javax.persistence.Enumerated;
 import java.time.LocalDateTime;
 
 @Data
-public class EmprestimoDto {
+public class EmprestimoDTO {
 
     private Long id;
     private Double valor;

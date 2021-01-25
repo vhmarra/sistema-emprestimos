@@ -7,7 +7,7 @@ import br.com.victor.emprestimos.domain.Perfis;
 import br.com.victor.emprestimos.domain.TokenCliente;
 import br.com.victor.emprestimos.dtos.CadastraClienteRequest;
 import br.com.victor.emprestimos.dtos.ClienteDataDTO;
-import br.com.victor.emprestimos.dtos.EmprestimoDto;
+import br.com.victor.emprestimos.dtos.EmprestimoDTO;
 import br.com.victor.emprestimos.enums.HistoricoAcoes;
 import br.com.victor.emprestimos.exceptions.InvalidCredencialsException;
 import br.com.victor.emprestimos.exceptions.InvalidInputException;
@@ -124,7 +124,6 @@ public class ClienteService extends TokenTheadService {
         Optional<TokenCliente> token = tokenRepository.findByCliente_Id(cliente.get().getId());
 
         token.get().setAtivo(true);
-        token.get().setDataCriacao(LocalDateTime.now());
         token.get().setDataAtualizado(LocalDateTime.now());
         token.get().setToken(tokenService.generateToken(cliente.get()));
 
@@ -154,7 +153,7 @@ public class ClienteService extends TokenTheadService {
             Cliente cliente = tokenService.findClienteByToken(tokenCliente);
             List<Emprestimo> emprestimo = emprestimoRepository.findAllByClienteId(cliente.getId());
             ClienteDataDTO dto = new ClienteDataDTO();
-            List<EmprestimoDto> emprestimoDtos = new ArrayList<>();
+            List<EmprestimoDTO> emprestimoDTOS = new ArrayList<>();
 
             dto.setCpf(cliente.getCpf());
             dto.setNome(cliente.getNome());
@@ -162,18 +161,18 @@ public class ClienteService extends TokenTheadService {
             dto.setSenha(cliente.getSenha().replace(cliente.getSenha(),"********************************"));
             dto.setPerfis(Arrays.asList(cliente.getPerfis().toString()));
             emprestimo.forEach(e->{
-                EmprestimoDto edto = new EmprestimoDto();
+                EmprestimoDTO edto = new EmprestimoDTO();
                 edto.setDataSolicitacao(e.getDataSolicitacao());
                 edto.setValor(e.getValor());
                 edto.setId(e.getId());
                 edto.setStatus(e.getStatus().toString());
-                emprestimoDtos.add(edto);
+                emprestimoDTOS.add(edto);
             });
-            dto.setEmprestimos(emprestimoDtos);
+            dto.setEmprestimos(emprestimoDTOS);
 
             return dto;
         }else{
-            throw new InvalidCredencialsException("sem permissao");
+            throw new InvalidCredencialsException("SEM PERMISSAO");
         }
     }
 

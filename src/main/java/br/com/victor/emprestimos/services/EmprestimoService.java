@@ -4,7 +4,7 @@ import br.com.victor.emprestimos.domain.Cliente;
 import br.com.victor.emprestimos.domain.Emprestimo;
 import br.com.victor.emprestimos.domain.Historico;
 import br.com.victor.emprestimos.domain.HistoricoCliente;
-import br.com.victor.emprestimos.dtos.EmprestimoDto;
+import br.com.victor.emprestimos.dtos.EmprestimoDTO;
 import br.com.victor.emprestimos.dtos.EmprestimoRequest;
 import br.com.victor.emprestimos.enums.HistoricoAcoes;
 import br.com.victor.emprestimos.enums.StatusEmprestimo;
@@ -92,7 +92,6 @@ public class EmprestimoService extends TokenTheadService {
 
     }
 
-
     //TODO mudar logica para aceitacao do emprestimo
     public void updateEmprestimo(Long idEmprestimo, StatusEmprestimo status) throws InvalidCredencialsException,
             InvalidInputException, InvalidTokenException {
@@ -131,8 +130,7 @@ public class EmprestimoService extends TokenTheadService {
         historicoClienteRepository.save(historicoCliente);
     }
 
-
-    public List<EmprestimoDto> getAllByToken() throws InvalidCredencialsException {
+    public List<EmprestimoDTO> getAllByToken() throws InvalidCredencialsException {
         Cliente cliente = tokenService.findClienteByToken(getToken());
 
         if(cliente == null){
@@ -140,10 +138,10 @@ public class EmprestimoService extends TokenTheadService {
         }
 
         List<Emprestimo> emprestimos = emprestimoRepository.findAllByClienteId(cliente.getId());
-        List<EmprestimoDto> response = new ArrayList<>();
+        List<EmprestimoDTO> response = new ArrayList<>();
 
         emprestimos.forEach(e->{
-            EmprestimoDto dto = new EmprestimoDto();
+            EmprestimoDTO dto = new EmprestimoDTO();
             dto.setStatus(e.getStatus().toString());
             dto.setValor(e.getValor());
             dto.setId(e.getId());
@@ -152,4 +150,5 @@ public class EmprestimoService extends TokenTheadService {
         });
         return response;
     }
+
 }

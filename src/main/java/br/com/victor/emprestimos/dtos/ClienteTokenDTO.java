@@ -17,7 +17,7 @@ public class ClienteTokenDTO {
 
     public static String converte(Cliente cliente){
         ClienteTokenDTO dto = new ClienteTokenDTO();
-        dto.senha = "**********************";
+        dto.senha = cliente.getSenha().replace(cliente.getSenha(),"****************************");
         dto.cpf = cliente.getCpf();
         dto.name = cliente.getNome();
         return dto.toString();

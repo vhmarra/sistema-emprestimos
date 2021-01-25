@@ -30,7 +30,7 @@ public class ScheduledService {
 
 
     @Scheduled(initialDelay = 1200000L, fixedRate = 1200000L)
-    public void removeTokens() throws InvalidCredencialsException {
+    public void removeTokens() {
         log.info("------REMOVENDO TOKENS------");
         List<TokenCliente> tokens = tokenRepository.findAll();
         tokens.forEach(t -> {

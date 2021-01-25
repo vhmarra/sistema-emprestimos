@@ -1,17 +1,20 @@
 package br.com.victor.emprestimos.controllers;
 
+import br.com.victor.emprestimos.domain.HistoricoCliente;
 import br.com.victor.emprestimos.dtos.ClienteDataDTO;
-import br.com.victor.emprestimos.dtos.EmprestimoDto;
+import br.com.victor.emprestimos.dtos.EmprestimoDTO;
 import br.com.victor.emprestimos.dtos.EmprestimoRequest;
+import br.com.victor.emprestimos.dtos.HistoricoClienteDTO;
 import br.com.victor.emprestimos.enums.StatusEmprestimo;
+import br.com.victor.emprestimos.exceptions.ForbiddenException;
 import br.com.victor.emprestimos.exceptions.InvalidCredencialsException;
 import br.com.victor.emprestimos.exceptions.InvalidInputException;
 import br.com.victor.emprestimos.exceptions.InvalidTokenException;
 import br.com.victor.emprestimos.services.ClienteService;
 import br.com.victor.emprestimos.services.EmprestimoService;
+import br.com.victor.emprestimos.services.HistoricoService;
 import br.com.victor.emprestimos.services.TokenService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,11 +31,13 @@ public class ClienteController {
     private final ClienteService clienteService;
     private final EmprestimoService emprestimoService;
     private final TokenService tokenService;
+    private final HistoricoService historicoService;
 
-    public ClienteController(ClienteService clienteService, EmprestimoService emprestimoService, TokenService tokenService) {
+    public ClienteController(ClienteService clienteService, EmprestimoService emprestimoService, TokenService tokenService, HistoricoService historicoService) {
         this.clienteService = clienteService;
         this.emprestimoService = emprestimoService;
         this.tokenService = tokenService;
+        this.historicoService = historicoService;
     }
 
     @PostMapping("solicita-emprestimo")
@@ -58,7 +63,7 @@ public class ClienteController {
     }
 
     @GetMapping("emprestimos-by-cliente-token")
-    public ResponseEntity<List<EmprestimoDto>> getAllByClienteToken(@RequestHeader String token) throws InvalidCredencialsException {
+    public ResponseEntity<List<EmprestimoDTO>> getAllByClienteToken(@RequestHeader String token) throws InvalidCredencialsException {
         return ResponseEntity.ok(emprestimoService.getAllByToken());
     }
 
@@ -66,6 +71,11 @@ public class ClienteController {
     public ResponseEntity<?> removeTokens(@RequestHeader String token) throws InvalidCredencialsException {
         tokenService.removeTokens();
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("get-all-historico")
+    public ResponseEntity<List<HistoricoClienteDTO>> getAllHistorico(@RequestHeader String token) throws ForbiddenException {
+        return ResponseEntity.ok(historicoService.getAllHistorico());
     }
 
 }

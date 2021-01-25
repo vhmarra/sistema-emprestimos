@@ -11,7 +11,7 @@ public class ClienteDataDTO {
     private String nome;
     private String cpf;
     private String senha;
-    List<EmprestimoDto> emprestimos;
+    List<EmprestimoDTO> emprestimos;
     List<String> perfis;
 
 }
