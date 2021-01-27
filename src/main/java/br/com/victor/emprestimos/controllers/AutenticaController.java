@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.mail.MessagingException;
+
 @RestController
 @RequestMapping("auth")
 public class AutenticaController {
@@ -24,7 +26,7 @@ public class AutenticaController {
     }
 
     @PostMapping("cadastra")
-    public ResponseEntity<?> cadastraCliente(@ModelAttribute @RequestAttribute CadastraClienteRequest request) throws InvalidInputException {
+    public ResponseEntity<?> cadastraCliente(@ModelAttribute @RequestAttribute CadastraClienteRequest request) throws InvalidInputException, MessagingException {
         clienteService.cadastraCliente(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }

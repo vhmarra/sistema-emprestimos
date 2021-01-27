@@ -8,6 +8,4 @@ import java.util.Optional;
 
 @Repository
 public interface HistoricoRepository extends JpaRepository<Historico,Long> {
-
-    Optional<Historico> findByEmprestimoId(Long id);
 }

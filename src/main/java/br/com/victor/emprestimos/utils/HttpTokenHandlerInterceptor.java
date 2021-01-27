@@ -25,14 +25,12 @@ import java.util.Optional;
 @Slf4j
 public class HttpTokenHandlerInterceptor extends WebRequestHandlerInterceptorAdapter {
 
-
-    @Autowired
-    public TokenRepository repository;
-    @Autowired
-    public WebRequestInterceptor requestInterceptor;
+    private final TokenRepository repository;
+    private final WebRequestInterceptor requestInterceptor;
 
     public HttpTokenHandlerInterceptor(WebRequestInterceptor requestInterceptor, TokenRepository repository) {
         super(requestInterceptor);
+        this.requestInterceptor = requestInterceptor;
         this.repository = repository;
     }
 
@@ -64,9 +62,8 @@ public class HttpTokenHandlerInterceptor extends WebRequestHandlerInterceptorAda
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         log.info("URL -> {}", request.getServletPath());
         if (request.getServletPath().contains("/cliente")) {
-            String tokenHeader = request.getHeader("token");
             log.info("INTERCEPTANDO TOKEN {}",request.getHeader("token"));
-            Optional<TokenCliente> tokenCliente = repository.findByToken(tokenHeader);
+            Optional<TokenCliente> tokenCliente = repository.findByToken(request.getHeader("token"));
             if(!tokenCliente.isPresent()){
                 throw new ForbiddenException("TOKEN NAO ESTA PRESENTE");
             }

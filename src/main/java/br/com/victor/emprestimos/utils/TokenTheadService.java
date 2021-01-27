@@ -22,4 +22,8 @@ public class TokenTheadService {
     public TokenCliente getTokenEntity(){
         return TokenThread.getToken().get();
     }
+
+    public Long getClienteId(){
+        return TokenThread.getToken().get().getCliente().getId();
+    }
 }

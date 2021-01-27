@@ -5,6 +5,7 @@ import br.com.victor.emprestimos.domain.HistoricoCliente;
 import br.com.victor.emprestimos.domain.TokenCliente;
 import br.com.victor.emprestimos.enums.HistoricoAcoes;
 import br.com.victor.emprestimos.exceptions.InvalidCredencialsException;
+import br.com.victor.emprestimos.exceptions.InvalidInputException;
 import br.com.victor.emprestimos.repository.HistoricoClienteRepository;
 import br.com.victor.emprestimos.repository.TokenRepository;
 import br.com.victor.emprestimos.utils.Constants;
@@ -12,11 +13,9 @@ import br.com.victor.emprestimos.utils.TokenTheadService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.core.env.Environment;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.Cookie;
+import javax.mail.MessagingException;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,13 +31,15 @@ public class TokenService extends TokenTheadService {
     private final HistoricoClienteRepository historicoRepository;
     private final PerfilService perfilService;
     private final Environment environment;
+    private final EmailService emailService;
 
 
-    public TokenService(TokenRepository tokenRepository, HistoricoClienteRepository historicoRepository, PerfilService perfilService, Environment environment) {
+    public TokenService(TokenRepository tokenRepository, HistoricoClienteRepository historicoRepository, PerfilService perfilService, Environment environment, EmailService emailService) {
         this.tokenRepository = tokenRepository;
         this.historicoRepository = historicoRepository;
         this.perfilService = perfilService;
         this.environment = environment;
+        this.emailService = emailService;
     }
 
     public String generateToken(Cliente cliente) {
@@ -77,6 +78,12 @@ public class TokenService extends TokenTheadService {
         tokens.forEach(t -> {
             t.setAtivo(false);
             t.setDataAtualizado(LocalDateTime.now());
+            try {
+                String emailBody = "Ola " + t.getCliente().getNome() + " seu token " + t.getToken() + " foi desabilitado " + "pelo adm do serviço";
+                emailService.sendEmail(t.getCliente().getEmail(),null,"Seu token foi removido",emailBody);
+            } catch (Exception e) {
+                e.getCause().toString();
+            }
             log.info("TOKEN {} DESATIVADO", t.getToken());
 
         HistoricoCliente historicoCliente = new HistoricoCliente();
@@ -86,6 +93,12 @@ public class TokenService extends TokenTheadService {
         tokenRepository.save(t);
         historicoRepository.save(historicoCliente);
         });
+
+        HistoricoCliente historicoCliente2 = new HistoricoCliente();
+        historicoCliente2.setCliente(getCliente());
+        historicoCliente2.setHistoricoStatus(HistoricoAcoes.ENVIOU_EMAIL);
+        historicoCliente2.setData(LocalDateTime.now());
+        historicoRepository.save(historicoCliente2);
         log.info("------TOKENS REMOVIDOS------");
     }
 

@@ -13,9 +13,12 @@ public class Constants {
     public static final Long SUPER_ADM = 3L;
 
     public static final Long TOKEN_EXPIRATION_TIME_12_HOURS = 43200000L;
-    public static final Long TOKEN_EXPIRATION_TIME_20_MIN = 600000L*2;
+    public static final String TOKEN_EXPIRATION_TIME_20_MIN = "token.expiration.20.min";
     public static final Long TOKEN_EXPIRATION_TIME_1_MIN = 60000L;
 
     public static final String TOKEN_EXPIRATION_TIME_20_MIN_CRON = "* 0/20 * * * *";
     public static final String TOKEN_EXPIRATION_TIME_1_MIN_CRON = "0/59 * * * * *";
+
+    public static final String EMAIL_LOGIN = "email.login";
+    public static final String EMAIL_SENHA = "email.senha";
 }

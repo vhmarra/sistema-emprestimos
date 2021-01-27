@@ -4,17 +4,12 @@ import br.com.victor.emprestimos.enums.StatusEmprestimo;
 import lombok.Data;
 
 import javax.persistence.Column;
-import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.time.LocalDateTime;
@@ -39,7 +34,7 @@ public class Emprestimo {
     @Column(name = "data")
     private LocalDateTime dataSolicitacao;
 
-    @ManyToOne(targetEntity = Cliente.class,optional = false,fetch = FetchType.LAZY)
+    @ManyToOne
     private Cliente cliente;
 
     @Override

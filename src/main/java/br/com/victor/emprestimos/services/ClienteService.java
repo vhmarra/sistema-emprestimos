@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
 
+import javax.mail.MessagingException;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -43,11 +44,12 @@ public class ClienteService extends TokenTheadService {
     private final TokenRepository tokenRepository;
     private final PerfilService perfilService;
     private final HistoricoClienteRepository historicoClienteRepository;
+    private final EmailService emailService;
 
 
     public ClienteService(ClienteRepository clienteRepository, EmprestimoRepository emprestimoRepository,
                           PerfilRepository perfilRepository, TokenService tokenService, TokenRepository tokenRepository,
-                          PerfilService perfilService, HistoricoClienteRepository historicoClienteRepository) {
+                          PerfilService perfilService, HistoricoClienteRepository historicoClienteRepository, EmailService emailService) {
         this.clienteRepository = clienteRepository;
         this.emprestimoRepository = emprestimoRepository;
         this.perfilRepository = perfilRepository;
@@ -55,10 +57,11 @@ public class ClienteService extends TokenTheadService {
         this.tokenRepository = tokenRepository;
         this.perfilService = perfilService;
         this.historicoClienteRepository = historicoClienteRepository;
+        this.emailService = emailService;
     }
 
 
-    public void cadastraCliente(@Valid CadastraClienteRequest request) throws InvalidInputException {
+    public void cadastraCliente(@Valid CadastraClienteRequest request) throws InvalidInputException, MessagingException {
         log.info("cadastrando novo cliente...");
 
         if(!clienteRepository.findByCpf(request.getCpf()).isEmpty()){
@@ -107,6 +110,8 @@ public class ClienteService extends TokenTheadService {
         tokenRepository.save(acessToken);
         historicoClienteRepository.save(historicoCliente);
         historicoClienteRepository.save(historicoCliente2);
+        String emailBody = "seja bem vindo ao sistema de emprestimos "+cliente.getNome();
+        emailService.sendEmail(cliente.getEmail(),null,"Cadastro com sucesso",emailBody);
         log.info("DADOS SALVOS");
 
     }
@@ -139,15 +144,6 @@ public class ClienteService extends TokenTheadService {
 
     }
 
-    public List<Cliente> findAll() throws InvalidCredencialsException {
-        if(!getCliente().getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))){
-            throw new InvalidCredencialsException("usuario sem permissao");
-        }
-        List<Cliente> clientes = clienteRepository.findAll();
-
-        return clientes;
-    }
-
     public ClienteDataDTO getDataIfSuperAdmin(String tokenCliente) throws InvalidCredencialsException {
         if(getCliente().getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))){
             Cliente cliente = tokenService.findClienteByToken(tokenCliente);
@@ -175,6 +171,8 @@ public class ClienteService extends TokenTheadService {
             throw new InvalidCredencialsException("SEM PERMISSAO");
         }
     }
+
+
 
 
 }

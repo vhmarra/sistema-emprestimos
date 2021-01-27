@@ -1,5 +1,6 @@
 package br.com.victor.emprestimos.controllers;
 
+import br.com.victor.emprestimos.domain.Cliente;
 import br.com.victor.emprestimos.domain.HistoricoCliente;
 import br.com.victor.emprestimos.dtos.ClienteDataDTO;
 import br.com.victor.emprestimos.dtos.EmprestimoDTO;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 
 @RequestMapping("cliente")
 @RestController
@@ -44,11 +46,6 @@ public class ClienteController {
     public ResponseEntity<?> solicitaEmprestimo(@RequestHeader String token, @RequestHeader @ModelAttribute EmprestimoRequest valor) throws InvalidTokenException, InvalidInputException, InvalidCredencialsException {
         emprestimoService.solicitaEmprestimo(valor);
         return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("get-all")
-    public List<?> getAll(@RequestHeader String token) throws InvalidCredencialsException {
-        return clienteService.findAll();
     }
 
     @GetMapping("get-data")
