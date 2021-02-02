@@ -3,10 +3,9 @@ package br.com.victor.emprestimos.utils;
 import br.com.victor.emprestimos.domain.TokenCliente;
 import br.com.victor.emprestimos.dtos.ClienteTokenDTO;
 import br.com.victor.emprestimos.exceptions.ForbiddenException;
-import br.com.victor.emprestimos.exceptions.InvalidCredencialsException;
+import br.com.victor.emprestimos.exceptions.InvalidTokenException;
 import br.com.victor.emprestimos.repository.TokenRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.WebRequestInterceptor;
@@ -18,6 +17,7 @@ import org.springframework.web.servlet.handler.WebRequestHandlerInterceptorAdapt
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Optional;
+import java.util.StringTokenizer;
 
 
 //TODO ver se tem outras formas de fazer esse interceptor
@@ -68,9 +68,10 @@ public class HttpTokenHandlerInterceptor extends WebRequestHandlerInterceptorAda
                 throw new ForbiddenException("TOKEN NAO ESTA PRESENTE");
             }
             if (tokenCliente.get().getAtivo() == false) {
-                throw new InvalidCredencialsException("TOKEN ESTA INVALIDADO");
+                throw new InvalidTokenException("TOKEN EXPIRADO");
             }
             TokenThread.setToken(tokenCliente.get());
+            log.info("IP DA REQUISICAO {} {} {}",request.getLocalAddr(),request.getLocalName(),request.getLocale().toString());
             log.info("TOKEN SETADO NA THREAD PARA O CLIENTE {}", ClienteTokenDTO.converte(tokenCliente.get().getCliente()));
         }
         return true;
@@ -83,8 +84,6 @@ public class HttpTokenHandlerInterceptor extends WebRequestHandlerInterceptorAda
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
     }
-
-
 
 }
 

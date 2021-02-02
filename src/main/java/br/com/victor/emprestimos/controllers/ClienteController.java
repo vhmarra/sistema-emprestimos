@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.mail.MessagingException;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,7 +44,7 @@ public class ClienteController {
     }
 
     @PostMapping("solicita-emprestimo")
-    public ResponseEntity<?> solicitaEmprestimo(@RequestHeader String token, @RequestHeader @ModelAttribute EmprestimoRequest valor) throws InvalidTokenException, InvalidInputException, InvalidCredencialsException {
+    public ResponseEntity<?> solicitaEmprestimo(@RequestHeader String token, @RequestHeader @ModelAttribute EmprestimoRequest valor) throws InvalidTokenException, InvalidInputException, InvalidCredencialsException, MessagingException {
         emprestimoService.solicitaEmprestimo(valor);
         return ResponseEntity.ok().build();
     }

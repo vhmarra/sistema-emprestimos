@@ -1,25 +1,30 @@
 package br.com.victor.emprestimos.services;
 
 import br.com.victor.emprestimos.domain.Cliente;
+import br.com.victor.emprestimos.domain.EmailToSent;
 import br.com.victor.emprestimos.domain.Emprestimo;
 import br.com.victor.emprestimos.domain.Historico;
 import br.com.victor.emprestimos.domain.HistoricoCliente;
 import br.com.victor.emprestimos.dtos.EmprestimoDTO;
 import br.com.victor.emprestimos.dtos.EmprestimoRequest;
+import br.com.victor.emprestimos.enums.EmailType;
 import br.com.victor.emprestimos.enums.HistoricoAcoes;
 import br.com.victor.emprestimos.enums.StatusEmprestimo;
 import br.com.victor.emprestimos.exceptions.InvalidCredencialsException;
 import br.com.victor.emprestimos.exceptions.InvalidInputException;
 import br.com.victor.emprestimos.exceptions.InvalidTokenException;
 import br.com.victor.emprestimos.repository.ClienteRepository;
+import br.com.victor.emprestimos.repository.EmailToSentRepository;
 import br.com.victor.emprestimos.repository.EmprestimoRepository;
 import br.com.victor.emprestimos.repository.HistoricoClienteRepository;
 import br.com.victor.emprestimos.repository.HistoricoRepository;
+import br.com.victor.emprestimos.utils.Constants;
 import br.com.victor.emprestimos.utils.TokenTheadService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.mail.MessagingException;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -38,23 +43,31 @@ public class EmprestimoService extends TokenTheadService {
     private final HistoricoRepository historicoRepository;
     private final PerfilService perfilService;
     private final HistoricoClienteRepository historicoClienteRepository;
+    private final EmailService emailService;
+    private final EmailToSentRepository emailToSentRepository;
 
     public EmprestimoService(TokenService tokenService, EmprestimoRepository emprestimoRepository,
                              ClienteRepository clienteRepository,
                              HistoricoRepository historicoRepository, PerfilService perfilService,
-                             HistoricoClienteRepository historicoClienteRepository) {
+                             HistoricoClienteRepository historicoClienteRepository, EmailService emailService, EmailToSentRepository emailToSentRepository) {
         this.tokenService = tokenService;
         this.emprestimoRepository = emprestimoRepository;
         this.clienteRepository = clienteRepository;
         this.historicoRepository = historicoRepository;
         this.perfilService = perfilService;
         this.historicoClienteRepository = historicoClienteRepository;
+        this.emailService = emailService;
+        this.emailToSentRepository = emailToSentRepository;
     }
 
     public void solicitaEmprestimo(EmprestimoRequest request) throws InvalidTokenException,
-            InvalidInputException, InvalidCredencialsException {
+            InvalidInputException, InvalidCredencialsException, MessagingException {
         Cliente cliente = tokenService.findClienteByToken(getToken());
+        Emprestimo e = emprestimoRepository.findByClienteId(getClienteId());
 
+        if(e != null){
+            throw new InvalidInputException("Cliente ja tem emprestimo ativo");
+        }
 
         if(!tokenService.isTokenValid(cliente)){
             throw new InvalidTokenException("Token Invalido");
@@ -84,11 +97,22 @@ public class EmprestimoService extends TokenTheadService {
         historicoCliente.setHistoricoStatus(HistoricoAcoes.SOLICITOU_EMPRESTIMO);
         historicoCliente.setData(LocalDateTime.now());
 
+        EmailToSent emailToSent = new EmailToSent();
+        emailToSent.setEmailSubject("Emprestimo solicitado com sucesso");
+        emailToSent.setEmailType(EmailType.EMAIL_EMPRESTIMO_SOLICITADO);
+        emailToSent.setSented(0);
+        emailToSent.setMessage(Constants.EMAIL_EMPRESTIMO_SOLICITADO
+                .replace("{}",cliente.getNome().toUpperCase())
+                .replace("{}",emprestimo.getValor().toString()));
+        emailToSent.setDateCreated(LocalDateTime.now());
+        emailToSent.setCliente(cliente);
+        emailToSent.setEmailAddress(cliente.getEmail());
 
         emprestimoRepository.save(emprestimo);
         historicoRepository.save(historico);
         clienteRepository.save(cliente);
         historicoClienteRepository.save(historicoCliente);
+        emailToSentRepository.save(emailToSent);
 
     }
 

@@ -1,6 +1,7 @@
 package br.com.victor.emprestimos.services;
 
 import br.com.victor.emprestimos.exceptions.InvalidInputException;
+import br.com.victor.emprestimos.repository.EmailToSentRepository;
 import br.com.victor.emprestimos.utils.TokenTheadService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +27,7 @@ public class EmailService extends TokenTheadService {
     private final String senha;
     private final Environment environment;
 
-    public EmailService(@Value("${email.login}") String login, @Value("${email.senha}") String senha, Environment environment) {
+    public EmailService(@Value("${email.login}") String login, @Value("${email.senha}") String senha, Environment environment, EmailToSentRepository emailToSentRepository) {
         this.login = login;
         this.senha = senha;
         this.environment = environment;
@@ -50,7 +51,7 @@ public class EmailService extends TokenTheadService {
         }
         Message message = prepareMessage(getSession(),emailCliente,clienteName,subjectEmail,emailBody);
         Transport.send(message);
-        log.info("EMAILS ENVIADO PARA TODOS OS CLIENTE QUE FORAM REMOVIDO TOKENS");
+        log.info("EMAIL ENVIADO {}",emailCliente);
     }
 
     private Message prepareMessage(Session s, String emailCliente, String clienteName, String subjectEmail,String emailBody) throws MessagingException {

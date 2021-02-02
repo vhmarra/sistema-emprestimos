@@ -1,6 +1,7 @@
 package br.com.victor.emprestimos.services;
 
 import br.com.victor.emprestimos.domain.Cliente;
+import br.com.victor.emprestimos.domain.EmailToSent;
 import br.com.victor.emprestimos.domain.Emprestimo;
 import br.com.victor.emprestimos.domain.HistoricoCliente;
 import br.com.victor.emprestimos.domain.Perfis;
@@ -8,10 +9,12 @@ import br.com.victor.emprestimos.domain.TokenCliente;
 import br.com.victor.emprestimos.dtos.CadastraClienteRequest;
 import br.com.victor.emprestimos.dtos.ClienteDataDTO;
 import br.com.victor.emprestimos.dtos.EmprestimoDTO;
+import br.com.victor.emprestimos.enums.EmailType;
 import br.com.victor.emprestimos.enums.HistoricoAcoes;
 import br.com.victor.emprestimos.exceptions.InvalidCredencialsException;
 import br.com.victor.emprestimos.exceptions.InvalidInputException;
 import br.com.victor.emprestimos.repository.ClienteRepository;
+import br.com.victor.emprestimos.repository.EmailToSentRepository;
 import br.com.victor.emprestimos.repository.EmprestimoRepository;
 import br.com.victor.emprestimos.repository.HistoricoClienteRepository;
 import br.com.victor.emprestimos.repository.PerfilRepository;
@@ -45,11 +48,12 @@ public class ClienteService extends TokenTheadService {
     private final PerfilService perfilService;
     private final HistoricoClienteRepository historicoClienteRepository;
     private final EmailService emailService;
+    private final EmailToSentRepository emailToSentRepository;
 
 
     public ClienteService(ClienteRepository clienteRepository, EmprestimoRepository emprestimoRepository,
                           PerfilRepository perfilRepository, TokenService tokenService, TokenRepository tokenRepository,
-                          PerfilService perfilService, HistoricoClienteRepository historicoClienteRepository, EmailService emailService) {
+                          PerfilService perfilService, HistoricoClienteRepository historicoClienteRepository, EmailService emailService, EmailToSentRepository emailToSentRepository) {
         this.clienteRepository = clienteRepository;
         this.emprestimoRepository = emprestimoRepository;
         this.perfilRepository = perfilRepository;
@@ -58,6 +62,7 @@ public class ClienteService extends TokenTheadService {
         this.perfilService = perfilService;
         this.historicoClienteRepository = historicoClienteRepository;
         this.emailService = emailService;
+        this.emailToSentRepository = emailToSentRepository;
     }
 
 
@@ -77,7 +82,9 @@ public class ClienteService extends TokenTheadService {
         cliente.setScoreCredito(request.getScoreCredito());
         cliente.setSenha(DigestUtils.sha512Hex(request.getSenha()));
         cliente.setCpf(request.getCpf());
-        cliente.setEmail(request.getEmail());
+
+        //cliente.setEmail(request.getEmail());
+        cliente.setEmail("marravh@gmail.com"); // USADO PARA TESTES
         cliente.setPerfis(Arrays.asList(perfilRepository.findById(Constants.ROLE_USER).get()));
 
         acessToken.setToken(tokenService.generateToken(cliente));
@@ -106,12 +113,21 @@ public class ClienteService extends TokenTheadService {
         log.info("HISTORICO GERADO");
 
         log.info("SALVANDO DADOS");
-        clienteRepository.save(cliente);
+        Cliente c = clienteRepository.save(cliente);
+
+        EmailToSent emailToSent = new EmailToSent();
+        emailToSent.setCliente(c);
+        emailToSent.setEmailAddress(c.getEmail());
+        emailToSent.setEmailSubject("Cadastro com sucesso");
+        emailToSent.setEmailType(EmailType.EMAIL_BOAS_VINDAS);
+        emailToSent.setSented(0);
+        emailToSent.setMessage(Constants.EMAIL_BOAS_VINDAS.replace("{}",c.getNome().toUpperCase()));
+        emailToSent.setDateCreated(LocalDateTime.now());
+
         tokenRepository.save(acessToken);
         historicoClienteRepository.save(historicoCliente);
         historicoClienteRepository.save(historicoCliente2);
-        String emailBody = "seja bem vindo ao sistema de emprestimos "+cliente.getNome();
-        emailService.sendEmail(cliente.getEmail(),null,"Cadastro com sucesso",emailBody);
+        emailToSentRepository.save(emailToSent);
         log.info("DADOS SALVOS");
 
     }

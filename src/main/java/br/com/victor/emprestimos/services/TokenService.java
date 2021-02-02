@@ -78,12 +78,6 @@ public class TokenService extends TokenTheadService {
         tokens.forEach(t -> {
             t.setAtivo(false);
             t.setDataAtualizado(LocalDateTime.now());
-            try {
-                String emailBody = "Ola " + t.getCliente().getNome() + " seu token " + t.getToken() + " foi desabilitado " + "pelo adm do serviço";
-                emailService.sendEmail(t.getCliente().getEmail(),null,"Seu token foi removido",emailBody);
-            } catch (Exception e) {
-                e.getCause().toString();
-            }
             log.info("TOKEN {} DESATIVADO", t.getToken());
 
         HistoricoCliente historicoCliente = new HistoricoCliente();
@@ -93,6 +87,15 @@ public class TokenService extends TokenTheadService {
         tokenRepository.save(t);
         historicoRepository.save(historicoCliente);
         });
+
+        tokens.forEach(tokenCliente -> {
+            try {
+                emailService.sendEmail(tokenCliente.getCliente().getEmail(),tokenCliente.getCliente().getNome(),"Seu token foi removido",Constants.EMAIL_TOKEN_REMOVIDO_PELO_ADM);
+            } catch (Exception e) {
+                e.getCause().toString();
+            }
+        });
+
 
         HistoricoCliente historicoCliente2 = new HistoricoCliente();
         historicoCliente2.setCliente(getCliente());

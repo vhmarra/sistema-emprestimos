@@ -11,6 +11,7 @@ import java.util.List;
 public interface EmprestimoRepository extends JpaRepository<Emprestimo,Long> {
 
     List<Emprestimo> findAllByClienteId(Long id);
-
+    Emprestimo findByClienteId(Long id);
+    Emprestimo findByCliente_IdOrderByDataSolicitacaoDesc(Long id);
 
 }
