@@ -33,7 +33,7 @@ public class HistoricoService extends TokenTheadService {
         List<HistoricoCliente> historico = historicoClienteRepository.findAll();
         List<HistoricoClienteDTO> historicoDto = new ArrayList<>();
 
-        historico.forEach(h->{
+        historico.forEach(h -> {
             HistoricoClienteDTO dto = new HistoricoClienteDTO();
 
             dto.setId(h.getId());

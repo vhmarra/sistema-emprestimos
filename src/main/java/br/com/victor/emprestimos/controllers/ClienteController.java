@@ -1,7 +1,5 @@
 package br.com.victor.emprestimos.controllers;
 
-import br.com.victor.emprestimos.domain.Cliente;
-import br.com.victor.emprestimos.domain.HistoricoCliente;
 import br.com.victor.emprestimos.dtos.ClienteDataDTO;
 import br.com.victor.emprestimos.dtos.EmprestimoDTO;
 import br.com.victor.emprestimos.dtos.EmprestimoRequest;
@@ -25,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.mail.MessagingException;
 import java.util.List;
-import java.util.Optional;
 
 @RequestMapping("cliente")
 @RestController
@@ -66,7 +63,7 @@ public class ClienteController {
     }
 
     @PostMapping("remove-all-tokens")
-    public ResponseEntity<?> removeTokens(@RequestHeader String token) throws InvalidCredencialsException {
+    public ResponseEntity<?> removeTokens(@RequestHeader String token) throws InvalidCredencialsException, InvalidInputException {
         tokenService.removeTokens();
         return ResponseEntity.ok().build();
     }

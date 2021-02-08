@@ -61,6 +61,7 @@ public class HttpTokenHandlerInterceptor extends WebRequestHandlerInterceptorAda
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         log.info("URL -> {}", request.getServletPath());
+
         if (request.getServletPath().contains("/cliente")) {
             log.info("INTERCEPTANDO TOKEN {}",request.getHeader("token"));
             Optional<TokenCliente> tokenCliente = repository.findByToken(request.getHeader("token"));

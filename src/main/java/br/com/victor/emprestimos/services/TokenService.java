@@ -15,7 +15,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
-import javax.mail.MessagingException;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -69,12 +68,17 @@ public class TokenService extends TokenTheadService {
         return tokenCliente.getCliente();
     }
 
-    public void removeTokens() throws InvalidCredencialsException {
+    public void removeTokens() throws InvalidCredencialsException, InvalidInputException {
         if (!getCliente().getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))) {
             throw new InvalidCredencialsException("Sem permissao de super adm");
         }
         log.info("------REMOVENDO TOKENS------");
-        List<TokenCliente> tokens = tokenRepository.findAll();
+        List<TokenCliente> tokens = tokenRepository.findAllByAtivo(true);
+
+        if(tokens.stream().noneMatch(t->t.getAtivo() == true)){
+            throw new InvalidInputException("Nenhum token ativo");
+        }
+
         tokens.forEach(t -> {
             t.setAtivo(false);
             t.setDataAtualizado(LocalDateTime.now());
@@ -95,7 +99,6 @@ public class TokenService extends TokenTheadService {
                 e.getCause().toString();
             }
         });
-
 
         HistoricoCliente historicoCliente2 = new HistoricoCliente();
         historicoCliente2.setCliente(getCliente());

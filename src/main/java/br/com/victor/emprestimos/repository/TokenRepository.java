@@ -12,7 +12,6 @@ public interface TokenRepository extends JpaRepository<TokenCliente,Long> {
 
     Optional<TokenCliente> findByCliente_Id(Long id);
     Optional<TokenCliente> findByToken(String token);
-    List<TokenCliente> findAllByAtivoIsFalse();
-    void deleteAllByAtivoIsFalse();
-    Optional<TokenCliente> findByCliente_IdAndAtivo(Long id, Boolean b);
+    List<TokenCliente> findAllByAtivo(Boolean isAtivo);
+
 }

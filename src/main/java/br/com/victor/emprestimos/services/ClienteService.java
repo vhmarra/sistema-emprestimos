@@ -4,7 +4,6 @@ import br.com.victor.emprestimos.domain.Cliente;
 import br.com.victor.emprestimos.domain.EmailToSent;
 import br.com.victor.emprestimos.domain.Emprestimo;
 import br.com.victor.emprestimos.domain.HistoricoCliente;
-import br.com.victor.emprestimos.domain.Perfis;
 import br.com.victor.emprestimos.domain.TokenCliente;
 import br.com.victor.emprestimos.dtos.CadastraClienteRequest;
 import br.com.victor.emprestimos.dtos.ClienteDataDTO;
@@ -25,10 +24,9 @@ import br.com.victor.emprestimos.utils.TokenThread;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.MessagingException;
-import javax.transaction.Transactional;
-import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,11 +47,12 @@ public class ClienteService extends TokenTheadService {
     private final HistoricoClienteRepository historicoClienteRepository;
     private final EmailService emailService;
     private final EmailToSentRepository emailToSentRepository;
+    private final ValidationService validationService;
 
 
     public ClienteService(ClienteRepository clienteRepository, EmprestimoRepository emprestimoRepository,
                           PerfilRepository perfilRepository, TokenService tokenService, TokenRepository tokenRepository,
-                          PerfilService perfilService, HistoricoClienteRepository historicoClienteRepository, EmailService emailService, EmailToSentRepository emailToSentRepository) {
+                          PerfilService perfilService, HistoricoClienteRepository historicoClienteRepository, EmailService emailService, EmailToSentRepository emailToSentRepository, ValidationService validationService) {
         this.clienteRepository = clienteRepository;
         this.emprestimoRepository = emprestimoRepository;
         this.perfilRepository = perfilRepository;
@@ -63,11 +62,22 @@ public class ClienteService extends TokenTheadService {
         this.historicoClienteRepository = historicoClienteRepository;
         this.emailService = emailService;
         this.emailToSentRepository = emailToSentRepository;
+        this.validationService = validationService;
     }
 
-
-    public void cadastraCliente(@Valid CadastraClienteRequest request) throws InvalidInputException, MessagingException {
+    public void cadastraCliente(CadastraClienteRequest request) throws InvalidInputException, MessagingException {
         log.info("cadastrando novo cliente...");
+
+        if(validationService.validaCPF(request.getCpf()).equals(false)){
+            throw new InvalidInputException("CPF INVALIDO");
+        }
+
+        //TODO TIRAR POIS EMAIL ESTA SENDO ENVIADO FIXO
+        //if(validationService.validaEmail(request.getEmail()).equals(false)){
+        //    throw new InvalidInputException("EMAIL INVALIDO");
+        // }
+        //TODO TIRAR POIS EMAIL ESTA SENDO ENVIADO FIXO
+
 
         if(!clienteRepository.findByCpf(request.getCpf()).isEmpty()){
             throw new InvalidInputException("Cliente ja possui cadastro");
@@ -83,6 +93,7 @@ public class ClienteService extends TokenTheadService {
         cliente.setSenha(DigestUtils.sha512Hex(request.getSenha()));
         cliente.setCpf(request.getCpf());
 
+        //TODO TIRAR EMAIL FIXO
         //cliente.setEmail(request.getEmail());
         cliente.setEmail("marravh@gmail.com"); // USADO PARA TESTES
         cliente.setPerfis(Arrays.asList(perfilRepository.findById(Constants.ROLE_USER).get()));
@@ -94,12 +105,7 @@ public class ClienteService extends TokenTheadService {
 
         //TODO usado somente para validações e testes
         if(cliente.getCpf().contains("10809606607")){
-            List<Perfis> perfis = new ArrayList<>();
-            perfis.add(perfilRepository.findById(Constants.ROLE_ADM).get());
-            perfis.add(perfilRepository.findById(Constants.ROLE_USER).get());
-            perfis.add(perfilRepository.findById(Constants.SUPER_ADM).get());
-
-            cliente.setPerfis(perfis);
+            cliente.setPerfis(perfilRepository.findAll());
             acessToken.setAtivo(true);
         }
         log.info("GERANDO HISTORICO");
@@ -134,6 +140,11 @@ public class ClienteService extends TokenTheadService {
 
     public String autentica(String cpf,String senha) throws InvalidCredencialsException, InvalidInputException {
         log.info("AUTENTICANDO CLIENTE COM CPF {}",cpf);
+
+        if(validationService.validaCPF(cpf).equals(false)){
+            throw new InvalidInputException("CPF INVALIDO");
+        }
+
         Optional<Cliente> cliente = clienteRepository.findByCpfAndSenha(cpf, DigestUtils.sha512Hex(senha));
         HistoricoCliente historicoCliente = new HistoricoCliente();
         if(cliente.isEmpty()){
@@ -142,6 +153,7 @@ public class ClienteService extends TokenTheadService {
         if(tokenService.isTokenValid(cliente.get())){
             throw new InvalidInputException("cliente ja esta autenticado");
         }
+
         Optional<TokenCliente> token = tokenRepository.findByCliente_Id(cliente.get().getId());
 
         token.get().setAtivo(true);

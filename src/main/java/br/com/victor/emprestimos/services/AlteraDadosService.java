@@ -14,6 +14,7 @@ import br.com.victor.emprestimos.utils.TokenTheadService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,6 +27,7 @@ public class AlteraDadosService extends TokenTheadService {
 
     private final ClienteRepository clienteRepository;
     private final EmailService emailService;
+    @Qualifier(value = "db2")
     private final AlteraDadosRepository alteraDadosRepository;
     private final HistoricoClienteRepository historicoClienteRepository;
 
@@ -90,8 +92,9 @@ public class AlteraDadosService extends TokenTheadService {
 
         clienteRepository.save(cliente);
         alteraDadosRepository.save(token);
+        historicoClienteRepository.save(historicoCliente);
         emailService.sendEmail(cliente.getEmail(),cliente.getNome(),
-                Constants.EMAIL_AVISO_TROCOU_SENHA_SUBJECT,Constants.EMAIL_AVISO_TROCOU_SENHA.replace("{}",cliente.getNome()));
+                Constants.EMAIL_AVISO_TROCOU_SENHA_SUBJECT,Constants.EMAIL_AVISO_TROCOU_SENHA.replace("{}",cliente.getNome().toUpperCase()));
     }
 
 }

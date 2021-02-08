@@ -1,7 +1,6 @@
 package br.com.victor.emprestimos.services;
 
 import br.com.victor.emprestimos.domain.EmailToSent;
-import br.com.victor.emprestimos.domain.Emprestimo;
 import br.com.victor.emprestimos.domain.HistoricoCliente;
 import br.com.victor.emprestimos.domain.TokenCliente;
 import br.com.victor.emprestimos.enums.EmailType;
@@ -17,7 +16,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import javax.mail.MessagingException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -41,9 +39,10 @@ public class ScheduledService {
     }
 
     @Scheduled(initialDelay = 1200000L, fixedRate = 1200000L)
-    public void removeTokens() {
+    public void removeTokens() throws Exception {
         log.info("------REMOVENDO TOKENS------");
-        List<TokenCliente> tokens = tokenRepository.findAll();
+        List<TokenCliente> tokens = tokenRepository.findAllByAtivo(true);
+
         tokens.forEach(t -> {
             t.setAtivo(false);
             t.setDataAtualizado(LocalDateTime.now());
@@ -60,47 +59,50 @@ public class ScheduledService {
         log.info("------TOKENS REMOVIDOS------");
     }
 
-    @Scheduled(initialDelay = 6L, fixedRate = 60000L)
+    @Scheduled(initialDelay = 10L, fixedRate = 60000L)
     public void sentEmailsBoasVindas() throws InvalidInputException {
         List<EmailToSent> emailToSents = emailToSentRepository.findAllBySentedAndEmailType(0, EmailType.EMAIL_BOAS_VINDAS);
         if (emailToSents.isEmpty()) {
             log.warn("NAO HA EMAILS DE BOAS VINDAS PARA ENVIAR");
+        } else {
+            log.info("Enviando emails de boas vindas...");
+            emailToSents.forEach(email -> {
+                try {
+                    emailService.sendEmail(email.getEmailAddress(), email.getCliente().getNome(),
+                            Constants.EMAIL_BOAS_VINDAS_SUBJECT, Constants.EMAIL_BOAS_VINDAS.replace("{}", email.getCliente().getNome().toUpperCase()));
+                    email.setSented(1);
+                    email.setDateSented(LocalDateTime.now());
+                    emailToSentRepository.save(email);
+                } catch (Exception e) {
+                    log.error("Erro ao enviar emails de boas vindas");
+                    e.getMessage();
+                }
+            });
+            log.info("Emails de boas vindas enviados...");
         }
-        emailToSents.forEach(email -> {
-            try {
-                emailService.sendEmail(email.getEmailAddress(), email.getCliente().getNome(),
-                        Constants.EMAIL_BOAS_VINDAS_SUBJECT, Constants.EMAIL_BOAS_VINDAS.replace("{}", email.getCliente().getNome().toUpperCase()));
-                email.setSented(1);
-                email.setDateSented(LocalDateTime.now());
-                emailToSentRepository.save(email);
-            } catch (Exception e) {
-                e.getMessage();
-            }
-        });
-
     }
 
-    @Scheduled(initialDelay = 6L, fixedRate = 60000L)
+    @Scheduled(initialDelay = 10L, fixedRate = 60000L)
     public void sentEmailsEmprestimoSolicitado() throws InvalidInputException {
         List<EmailToSent> emailToSents = emailToSentRepository.findAllBySentedAndEmailType(0, EmailType.EMAIL_EMPRESTIMO_SOLICITADO);
         if (emailToSents.isEmpty()) {
             log.warn("NAO HA EMAILS DE SOLICITACAO DE EMPRESTIMOS PARA ENVIAR");
+        } else {
+            log.info("Enviando emails de solicitacao de emprestimos...");
+            emailToSents.forEach(email -> {
+                try {
+                    emailService.sendEmail(email.getEmailAddress(), email.getCliente().getNome(), Constants.EMAIL_EMPRESTIMO_SOLICITADO_SUBJECT, Constants.EMAIL_EMPRESTIMO_SOLICITADO
+                            .replace("cn", email.getCliente().getNome().toUpperCase())
+                            .replace("vl", emprestimoRepository.findByClienteId(email.getCliente().getId()).getValor().toString()));
+                    email.setSented(1);
+                    email.setDateSented(LocalDateTime.now());
+                    emailToSentRepository.save(email);
+                } catch (Exception e) {
+                    log.error("Erro ao enviar emails de solicitacao de emprestimos");
+                    e.printStackTrace();
+                }
+            });
+            log.info("Emails de solicitacao de emprestimos enviados com sucesso");
         }
-        emailToSents.forEach(email -> {
-            try {
-                emailService.sendEmail(email.getEmailAddress(), email.getCliente().getNome(), Constants.EMAIL_EMPRESTIMO_SOLICITADO_SUBJECT, Constants.EMAIL_EMPRESTIMO_SOLICITADO
-                        .replace("cn", email.getCliente().getNome().toUpperCase())
-                        .replace("vl", emprestimoRepository.findByClienteId(email.getCliente().getId()).getValor().toString()));
-                email.setSented(1);
-                email.setDateSented(LocalDateTime.now());
-                emailToSentRepository.save(email);
-            } catch (MessagingException e) {
-                e.printStackTrace();
-            } catch (InvalidInputException e) {
-                e.printStackTrace();
-            }
-        });
-
     }
-
 }
