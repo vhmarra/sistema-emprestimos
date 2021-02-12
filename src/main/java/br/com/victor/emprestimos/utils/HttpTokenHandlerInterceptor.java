@@ -17,7 +17,6 @@ import org.springframework.web.servlet.handler.WebRequestHandlerInterceptorAdapt
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Optional;
-import java.util.StringTokenizer;
 
 
 //TODO ver se tem outras formas de fazer esse interceptor
@@ -46,17 +45,7 @@ public class HttpTokenHandlerInterceptor extends WebRequestHandlerInterceptorAda
             public void addInterceptors(InterceptorRegistry registry) {
                 registry.addInterceptor(new HttpTokenHandlerInterceptor(requestInterceptor, repository))
                         .addPathPatterns("/**")
-                        .excludePathPatterns(
-                                "/v2/api-docs",
-                                "/swagger-resources/**",
-                                "/swagger-ui.html",
-                                "/webjars/**",
-                                "/auth/**"
-                        );
-
-            }
-        };
-    }
+                        .excludePathPatterns("/v2/api-docs","/swagger-resources/**","/swagger-ui.html", "/webjars/**","/auth/**");}};}
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -72,7 +61,7 @@ public class HttpTokenHandlerInterceptor extends WebRequestHandlerInterceptorAda
                 throw new InvalidTokenException("TOKEN EXPIRADO");
             }
             TokenThread.setToken(tokenCliente.get());
-            log.info("IP DA REQUISICAO {} {} {}",request.getLocalAddr(),request.getLocalName(),request.getLocale().toString());
+
             log.info("TOKEN SETADO NA THREAD PARA O CLIENTE {}", ClienteTokenDTO.converte(tokenCliente.get().getCliente()));
         }
         return true;

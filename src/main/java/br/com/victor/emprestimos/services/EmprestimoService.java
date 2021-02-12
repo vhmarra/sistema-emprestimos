@@ -34,7 +34,7 @@ import java.util.Optional;
 @Service
 @Data
 @Slf4j
-@Transactional
+@Transactional(Transactional.TxType.NEVER)
 public class EmprestimoService extends TokenTheadService {
 
     private final TokenService tokenService;
@@ -63,21 +63,21 @@ public class EmprestimoService extends TokenTheadService {
     public void solicitaEmprestimo(EmprestimoRequest request) throws InvalidTokenException,
             InvalidInputException, InvalidCredencialsException, MessagingException {
         Cliente cliente = tokenService.findClienteByToken(getToken());
-        Emprestimo e = emprestimoRepository.findByClienteId(getClienteId());
+        List<Emprestimo> e = emprestimoRepository.findAllByClienteIdAndStatusNot(getClienteId(),StatusEmprestimo.FINALIZADO);
 
-        if(e != null){
-            throw new InvalidInputException("Cliente ja tem emprestimo ativo");
+        if(e.size() >= 1){
+            throw new InvalidInputException("Usuario já possui emprestimo em andamento");
         }
 
-        if(!tokenService.isTokenValid(cliente)){
+        if (!tokenService.isTokenValid(cliente)) {
             throw new InvalidTokenException("Token Invalido");
         }
 
-        if(request.getValor() > 150000.00 || request.getValor() < 0 || cliente.getScoreCredito() < 200){
+        if (request.getValor() > 150000.00 || request.getValor() < 0 || cliente.getScoreCredito() < 200) {
             throw new InvalidInputException("Valores invalidos");
         }
 
-        if(request.getValor() > 1000 && cliente.getScoreCredito() < 200){ //LOGICA PARA ACEITACAO DO EMPRESTIMO
+        if (request.getValor() > 1000 && cliente.getScoreCredito() < 200) { //LOGICA PARA ACEITACAO DO EMPRESTIMO
             throw new InvalidInputException("Cliente com score de credito baixo!");
         }
 
@@ -102,8 +102,8 @@ public class EmprestimoService extends TokenTheadService {
         emailToSent.setEmailType(EmailType.EMAIL_EMPRESTIMO_SOLICITADO);
         emailToSent.setSented(0);
         emailToSent.setMessage(Constants.EMAIL_EMPRESTIMO_SOLICITADO
-                .replace("{}",cliente.getNome().toUpperCase())
-                .replace("{}",emprestimo.getValor().toString()));
+                .replace("cn", cliente.getNome().toUpperCase())
+                .replace("vl", emprestimo.getValor().toString()));
         emailToSent.setDateCreated(LocalDateTime.now());
         emailToSent.setCliente(cliente);
         emailToSent.setEmailAddress(cliente.getEmail());
@@ -125,13 +125,13 @@ public class EmprestimoService extends TokenTheadService {
         Historico historico = new Historico();
         HistoricoCliente historicoCliente = new HistoricoCliente();
 
-        if(!tokenService.isTokenValid(cliente)){
+        if (!tokenService.isTokenValid(cliente)) {
             throw new InvalidTokenException("Token invalido, se autentique antes");
         }
-        if(status == emprestimo.get().getStatus()){
+        if (status == emprestimo.get().getStatus()) {
             throw new InvalidInputException("Mesmo Status");
         }
-        if(status == StatusEmprestimo.FINALIZADO){
+        if (status == StatusEmprestimo.FINALIZADO) {
             emprestimo.get().setStatus(status);
             emprestimoRepository.save(emprestimo.get());
             historico.setStatus(status);
@@ -140,7 +140,7 @@ public class EmprestimoService extends TokenTheadService {
             historicoRepository.save(historico);
 
         }
-        if(status == StatusEmprestimo.ACEITO){
+        if (status == StatusEmprestimo.ACEITO) {
             emprestimo.get().setStatus(status);
             emprestimoRepository.save(emprestimo.get());
             historico.setStatus(status);
@@ -154,17 +154,16 @@ public class EmprestimoService extends TokenTheadService {
         historicoClienteRepository.save(historicoCliente);
     }
 
-    public List<EmprestimoDTO> getAllByToken() throws InvalidCredencialsException {
+    public List<EmprestimoDTO> getAllByToken() throws InvalidCredencialsException, InvalidInputException {
         Cliente cliente = tokenService.findClienteByToken(getToken());
 
-        if(cliente == null){
+        if (cliente == null) {
             throw new InvalidCredencialsException("cliente nao encontrado");
         }
 
-        List<Emprestimo> emprestimos = emprestimoRepository.findAllByClienteId(cliente.getId());
-        List<EmprestimoDTO> response = new ArrayList<>();
 
-        emprestimos.forEach(e->{
+        List<EmprestimoDTO> response = new ArrayList<>();
+        emprestimoRepository.findAllByClienteId(cliente.getId()).forEach(e -> {
             EmprestimoDTO dto = new EmprestimoDTO();
             dto.setStatus(e.getStatus().toString());
             dto.setValor(e.getValor());
@@ -172,7 +171,12 @@ public class EmprestimoService extends TokenTheadService {
             dto.setDataSolicitacao(e.getDataSolicitacao());
             response.add(dto);
         });
+
+        if(response.isEmpty()){
+            throw new InvalidInputException("Cliente não possui emprestimo ativo");
+        }
         return response;
     }
-
 }
+
+

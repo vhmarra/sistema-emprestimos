@@ -1,6 +1,5 @@
 package br.com.victor.emprestimos.services;
 
-import br.com.victor.emprestimos.domain.HistoricoCliente;
 import br.com.victor.emprestimos.dtos.HistoricoClienteDTO;
 import br.com.victor.emprestimos.exceptions.ForbiddenException;
 import br.com.victor.emprestimos.repository.HistoricoClienteRepository;
@@ -30,19 +29,17 @@ public class HistoricoService extends TokenTheadService {
         if(!getCliente().getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))){
             throw new ForbiddenException("Usuario sem permissao");
         }
-        List<HistoricoCliente> historico = historicoClienteRepository.findAll();
+
         List<HistoricoClienteDTO> historicoDto = new ArrayList<>();
-
-        historico.forEach(h -> {
+        historicoClienteRepository.findAll().forEach(h -> {
             HistoricoClienteDTO dto = new HistoricoClienteDTO();
-
             dto.setId(h.getId());
             dto.setData(h.getData().toString());
             dto.setIdCliente(h.getCliente().getId());
             dto.setStatus(h.getHistoricoStatus().toString());
             dto.setClienteNome(h.getCliente().getNome());
             historicoDto.add(dto);
-        });
+        });;
 
         return historicoDto;
     }

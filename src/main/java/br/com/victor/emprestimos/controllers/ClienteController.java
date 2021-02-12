@@ -1,6 +1,5 @@
 package br.com.victor.emprestimos.controllers;
 
-import br.com.victor.emprestimos.dtos.ClienteDataDTO;
 import br.com.victor.emprestimos.dtos.EmprestimoDTO;
 import br.com.victor.emprestimos.dtos.EmprestimoRequest;
 import br.com.victor.emprestimos.dtos.HistoricoClienteDTO;
@@ -12,6 +11,7 @@ import br.com.victor.emprestimos.exceptions.InvalidTokenException;
 import br.com.victor.emprestimos.services.ClienteService;
 import br.com.victor.emprestimos.services.EmprestimoService;
 import br.com.victor.emprestimos.services.HistoricoService;
+import br.com.victor.emprestimos.services.PerfilService;
 import br.com.victor.emprestimos.services.TokenService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,23 +32,20 @@ public class ClienteController {
     private final EmprestimoService emprestimoService;
     private final TokenService tokenService;
     private final HistoricoService historicoService;
+    private final PerfilService perfilService;
 
-    public ClienteController(ClienteService clienteService, EmprestimoService emprestimoService, TokenService tokenService, HistoricoService historicoService) {
+    public ClienteController(ClienteService clienteService, EmprestimoService emprestimoService, TokenService tokenService, HistoricoService historicoService, PerfilService perfilService) {
         this.clienteService = clienteService;
         this.emprestimoService = emprestimoService;
         this.tokenService = tokenService;
         this.historicoService = historicoService;
+        this.perfilService = perfilService;
     }
 
     @PostMapping("solicita-emprestimo")
     public ResponseEntity<?> solicitaEmprestimo(@RequestHeader String token, @RequestHeader @ModelAttribute EmprestimoRequest valor) throws InvalidTokenException, InvalidInputException, InvalidCredencialsException, MessagingException {
         emprestimoService.solicitaEmprestimo(valor);
         return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("get-data")
-    public ClienteDataDTO getDataIfSuper(@RequestHeader String tokenCliente, @RequestHeader String token) throws InvalidCredencialsException {
-        return clienteService.getDataIfSuperAdmin(tokenCliente);
     }
 
     @PostMapping("update-emprestimo")
@@ -58,7 +55,7 @@ public class ClienteController {
     }
 
     @GetMapping("emprestimos-by-cliente-token")
-    public ResponseEntity<List<EmprestimoDTO>> getAllByClienteToken(@RequestHeader String token) throws InvalidCredencialsException {
+    public ResponseEntity<List<EmprestimoDTO>> getAllByClienteToken(@RequestHeader String token) throws InvalidCredencialsException, InvalidInputException {
         return ResponseEntity.ok(emprestimoService.getAllByToken());
     }
 
@@ -73,4 +70,15 @@ public class ClienteController {
         return ResponseEntity.ok(historicoService.getAllHistorico());
     }
 
+    @PostMapping("add-permission")
+    public ResponseEntity<?> addPermission(@RequestHeader String token, @RequestHeader String cpfCliente, @RequestHeader Long idPermission) throws InvalidInputException, InvalidCredencialsException {
+        perfilService.addPermissao(cpfCliente,idPermission);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("remove-permission")
+    public ResponseEntity<?> removePermission(@RequestHeader String token, @RequestHeader String cpfCliente, @RequestHeader Long idPermission) throws InvalidInputException, InvalidCredencialsException {
+        perfilService.deletePermissao(cpfCliente,idPermission);
+        return ResponseEntity.ok().build();
+    }
 }
