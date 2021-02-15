@@ -2,6 +2,7 @@ package br.com.victor.emprestimos.dtos;
 
 import io.swagger.annotations.ApiParam;
 import lombok.Data;
+import org.hibernate.validator.constraints.br.CPF;
 
 import javax.validation.constraints.Email;
 
@@ -15,7 +16,6 @@ public class CadastraClienteRequest {
     private String cpf;
 
     @ApiParam(required = false)
-    @Email
     private String email;
 
     @ApiParam(required = true)

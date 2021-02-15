@@ -34,6 +34,9 @@ dependencies {
 	compile group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
 	compile group: 'javax.mail', name: 'mail', version: '1.4.1'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	// https://mvnrepository.com/artifact/com.maxmind.geoip2/geoip2
+	compile group: 'com.maxmind.geoip2', name: 'geoip2', version: '2.15.0'
+
 
 }
 

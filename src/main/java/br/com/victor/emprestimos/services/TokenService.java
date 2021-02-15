@@ -67,21 +67,20 @@ public class TokenService extends TokenTheadService {
         return tokenCliente.getCliente();
     }
 
-    public void removeTokens() throws InvalidCredencialsException {
+    public void removeTokens() throws InvalidCredencialsException, InvalidInputException {
         if (!getCliente().getPerfis().contains(perfilService.findById(Constants.SUPER_ADM))) {
             throw new InvalidCredencialsException("Sem permissao de super adm");
         }
         log.info("------REMOVENDO TOKENS------");
-        List<TokenCliente> tokens = tokenRepository.findAll();
+        List<TokenCliente> tokens = tokenRepository.findAllByAtivo(true);
+
+        if(tokens.stream().noneMatch(t->t.getAtivo() == true)){
+            throw new InvalidInputException("Nenhum token ativo");
+        }
+
         tokens.forEach(t -> {
             t.setAtivo(false);
             t.setDataAtualizado(LocalDateTime.now());
-            try {
-                String emailBody = "Ola " + t.getCliente().getNome() + " seu token " + t.getToken() + " foi desabilitado " + "pelo adm do serviço";
-                emailService.sendEmail(t.getCliente().getEmail(),null,"Seu token foi removido",emailBody);
-            } catch (Exception e) {
-                e.getCause().toString();
-            }
             log.info("TOKEN {} DESATIVADO", t.getToken());
 
         HistoricoCliente historicoCliente = new HistoricoCliente();
@@ -90,6 +89,14 @@ public class TokenService extends TokenTheadService {
         historicoCliente.setHistoricoStatus(HistoricoAcoes.REMOVEU_TOKEN);
         tokenRepository.save(t);
         historicoRepository.save(historicoCliente);
+        });
+
+        tokens.forEach(tokenCliente -> {
+            try {
+                emailService.sendEmail(tokenCliente.getCliente().getEmail(),tokenCliente.getCliente().getNome(),"Seu token foi removido",Constants.EMAIL_TOKEN_REMOVIDO_PELO_ADM);
+            } catch (Exception e) {
+                e.getCause().toString();
+            }
         });
 
         HistoricoCliente historicoCliente2 = new HistoricoCliente();

@@ -1,25 +1,30 @@
 package br.com.victor.emprestimos.services;
 
 import br.com.victor.emprestimos.domain.Cliente;
+import br.com.victor.emprestimos.domain.EmailToSent;
 import br.com.victor.emprestimos.domain.Emprestimo;
 import br.com.victor.emprestimos.domain.Historico;
 import br.com.victor.emprestimos.domain.HistoricoCliente;
 import br.com.victor.emprestimos.dtos.EmprestimoDTO;
 import br.com.victor.emprestimos.dtos.EmprestimoRequest;
+import br.com.victor.emprestimos.enums.EmailType;
 import br.com.victor.emprestimos.enums.HistoricoAcoes;
 import br.com.victor.emprestimos.enums.StatusEmprestimo;
 import br.com.victor.emprestimos.exceptions.InvalidCredencialsException;
 import br.com.victor.emprestimos.exceptions.InvalidInputException;
 import br.com.victor.emprestimos.exceptions.InvalidTokenException;
 import br.com.victor.emprestimos.repository.ClienteRepository;
+import br.com.victor.emprestimos.repository.EmailToSentRepository;
 import br.com.victor.emprestimos.repository.EmprestimoRepository;
 import br.com.victor.emprestimos.repository.HistoricoClienteRepository;
 import br.com.victor.emprestimos.repository.HistoricoRepository;
+import br.com.victor.emprestimos.utils.Constants;
 import br.com.victor.emprestimos.utils.TokenTheadService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.mail.MessagingException;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -29,7 +34,7 @@ import java.util.Optional;
 @Service
 @Data
 @Slf4j
-@Transactional
+@Transactional(Transactional.TxType.NEVER)
 public class EmprestimoService extends TokenTheadService {
 
     private final TokenService tokenService;
@@ -38,33 +43,41 @@ public class EmprestimoService extends TokenTheadService {
     private final HistoricoRepository historicoRepository;
     private final PerfilService perfilService;
     private final HistoricoClienteRepository historicoClienteRepository;
+    private final EmailService emailService;
+    private final EmailToSentRepository emailToSentRepository;
 
     public EmprestimoService(TokenService tokenService, EmprestimoRepository emprestimoRepository,
                              ClienteRepository clienteRepository,
                              HistoricoRepository historicoRepository, PerfilService perfilService,
-                             HistoricoClienteRepository historicoClienteRepository) {
+                             HistoricoClienteRepository historicoClienteRepository, EmailService emailService, EmailToSentRepository emailToSentRepository) {
         this.tokenService = tokenService;
         this.emprestimoRepository = emprestimoRepository;
         this.clienteRepository = clienteRepository;
         this.historicoRepository = historicoRepository;
         this.perfilService = perfilService;
         this.historicoClienteRepository = historicoClienteRepository;
+        this.emailService = emailService;
+        this.emailToSentRepository = emailToSentRepository;
     }
 
     public void solicitaEmprestimo(EmprestimoRequest request) throws InvalidTokenException,
-            InvalidInputException, InvalidCredencialsException {
+            InvalidInputException, InvalidCredencialsException, MessagingException {
         Cliente cliente = tokenService.findClienteByToken(getToken());
+        List<Emprestimo> e = emprestimoRepository.findAllByClienteIdAndStatusNot(getClienteId(),StatusEmprestimo.FINALIZADO);
 
+        if(e.size() >= 1){
+            throw new InvalidInputException("Usuario já possui emprestimo em andamento");
+        }
 
-        if(!tokenService.isTokenValid(cliente)){
+        if (!tokenService.isTokenValid(cliente)) {
             throw new InvalidTokenException("Token Invalido");
         }
 
-        if(request.getValor() > 150000.00 || request.getValor() < 0 || cliente.getScoreCredito() < 200){
+        if (request.getValor() > 150000.00 || request.getValor() < 0 || cliente.getScoreCredito() < 200) {
             throw new InvalidInputException("Valores invalidos");
         }
 
-        if(request.getValor() > 1000 && cliente.getScoreCredito() < 200){ //LOGICA PARA ACEITACAO DO EMPRESTIMO
+        if (request.getValor() > 1000 && cliente.getScoreCredito() < 200) { //LOGICA PARA ACEITACAO DO EMPRESTIMO
             throw new InvalidInputException("Cliente com score de credito baixo!");
         }
 
@@ -84,11 +97,22 @@ public class EmprestimoService extends TokenTheadService {
         historicoCliente.setHistoricoStatus(HistoricoAcoes.SOLICITOU_EMPRESTIMO);
         historicoCliente.setData(LocalDateTime.now());
 
+        EmailToSent emailToSent = new EmailToSent();
+        emailToSent.setEmailSubject("Emprestimo solicitado com sucesso");
+        emailToSent.setEmailType(EmailType.EMAIL_EMPRESTIMO_SOLICITADO);
+        emailToSent.setSented(0);
+        emailToSent.setMessage(Constants.EMAIL_EMPRESTIMO_SOLICITADO
+                .replace("cn", cliente.getNome().toUpperCase())
+                .replace("vl", emprestimo.getValor().toString()));
+        emailToSent.setDateCreated(LocalDateTime.now());
+        emailToSent.setCliente(cliente);
+        emailToSent.setEmailAddress(cliente.getEmail());
 
         emprestimoRepository.save(emprestimo);
         historicoRepository.save(historico);
         clienteRepository.save(cliente);
         historicoClienteRepository.save(historicoCliente);
+        emailToSentRepository.save(emailToSent);
 
     }
 
@@ -101,13 +125,13 @@ public class EmprestimoService extends TokenTheadService {
         Historico historico = new Historico();
         HistoricoCliente historicoCliente = new HistoricoCliente();
 
-        if(!tokenService.isTokenValid(cliente)){
+        if (!tokenService.isTokenValid(cliente)) {
             throw new InvalidTokenException("Token invalido, se autentique antes");
         }
-        if(status == emprestimo.get().getStatus()){
+        if (status == emprestimo.get().getStatus()) {
             throw new InvalidInputException("Mesmo Status");
         }
-        if(status == StatusEmprestimo.FINALIZADO){
+        if (status == StatusEmprestimo.FINALIZADO) {
             emprestimo.get().setStatus(status);
             emprestimoRepository.save(emprestimo.get());
             historico.setStatus(status);
@@ -116,7 +140,7 @@ public class EmprestimoService extends TokenTheadService {
             historicoRepository.save(historico);
 
         }
-        if(status == StatusEmprestimo.ACEITO){
+        if (status == StatusEmprestimo.ACEITO) {
             emprestimo.get().setStatus(status);
             emprestimoRepository.save(emprestimo.get());
             historico.setStatus(status);
@@ -130,17 +154,16 @@ public class EmprestimoService extends TokenTheadService {
         historicoClienteRepository.save(historicoCliente);
     }
 
-    public List<EmprestimoDTO> getAllByToken() throws InvalidCredencialsException {
+    public List<EmprestimoDTO> getAllByToken() throws InvalidCredencialsException, InvalidInputException {
         Cliente cliente = tokenService.findClienteByToken(getToken());
 
-        if(cliente == null){
+        if (cliente == null) {
             throw new InvalidCredencialsException("cliente nao encontrado");
         }
 
-        List<Emprestimo> emprestimos = emprestimoRepository.findAllByClienteId(cliente.getId());
-        List<EmprestimoDTO> response = new ArrayList<>();
 
-        emprestimos.forEach(e->{
+        List<EmprestimoDTO> response = new ArrayList<>();
+        emprestimoRepository.findAllByClienteId(cliente.getId()).forEach(e -> {
             EmprestimoDTO dto = new EmprestimoDTO();
             dto.setStatus(e.getStatus().toString());
             dto.setValor(e.getValor());
@@ -148,7 +171,12 @@ public class EmprestimoService extends TokenTheadService {
             dto.setDataSolicitacao(e.getDataSolicitacao());
             response.add(dto);
         });
+
+        if(response.isEmpty()){
+            throw new InvalidInputException("Cliente não possui emprestimo ativo");
+        }
         return response;
     }
-
 }
+
+
